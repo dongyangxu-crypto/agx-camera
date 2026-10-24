@@ -1,0 +1,1149 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>银盐 AgX</title>
+<meta name="description" content="为 iPhone 17 相机准备的胶片色彩相机：富士、徕卡、理光、佳能、尼康、索尼、哈苏、柯达等 87 款色彩风格，按人像、风景、街拍等场景挑选。">
+<meta name="theme-color" content="#101211">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="银盐">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" type="image/png" href="icon-192.png">
+<style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}[hidden]{display:none!important}img{max-width:100%}</style>
+</head>
+<body>
+<style>
+/* Layout: one-screen camera. Viewfinder fills the top; scene pills, a brand dial row and a film strip of looks sit above the shutter bar. Desktop puts the controls in a right-hand column. */
+:root{
+  --body:#101211; --well:#060707; --panel:#1a1c1b; --raise:#252826; --line:#343836;
+  --ink:#ece8df; --mute:#8f948f; --amber:#ffb340; --on-amber:#1c1404; --stamp:#ff7d1f;
+  --paper:#f6f4ee; --paper-ink:#1d1d1b; --paper-mute:#7b7a74; --on-photo:#ffffff; --shade:rgba(0,0,0,.55);
+  --f-dial:"DIN Condensed","Avenir Next Condensed","Arial Narrow","Roboto Condensed",sans-serif;
+  --f-ui:-apple-system,BlinkMacSystemFont,"PingFang SC","Hiragino Sans GB","Microsoft YaHei","Noto Sans SC",system-ui,sans-serif;
+  --f-mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html{height:100%;box-sizing:border-box;background:var(--body)}
+body{height:100%;margin:0;overflow:hidden;background:var(--body);color:var(--ink);font:14px/1.4 var(--f-ui);-webkit-font-smoothing:antialiased;-webkit-tap-highlight-color:transparent;overscroll-behavior:none}
+button{font:inherit;color:inherit;background:none;border:0;padding:0;margin:0;cursor:pointer;-webkit-user-select:none;user-select:none;touch-action:manipulation}
+button:focus-visible,input:focus-visible,label:focus-within{outline:2px solid var(--amber);outline-offset:2px}
+.mono{font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+.vh{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none;overflow:hidden}
+
+.app{height:100%;max-width:560px;margin:0 auto;display:grid;
+  grid-template-rows:auto minmax(0,1fr) auto auto auto auto;
+  grid-template-areas:"top" "vf" "scenes" "brands" "strip" "dock";
+  gap:8px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:6px 8px}
+
+/* top bar */
+.top{grid-area:top;display:flex;align-items:center;justify-content:space-between;gap:12px;height:40px}
+.mark{display:flex;align-items:baseline;gap:8px;min-width:0}
+.mark b{font-size:18px;font-weight:700;letter-spacing:.06em;white-space:nowrap}
+.mark span{font:700 11px/1 var(--f-dial);letter-spacing:.16em;color:var(--mute);white-space:nowrap}
+.top-actions{display:flex;gap:6px;flex:none}
+.tbtn{height:32px;min-width:32px;padding:0 11px;border-radius:16px;background:var(--raise);font-size:13px;display:inline-flex;align-items:center;justify-content:center;gap:6px}
+.tbtn svg{width:17px;height:17px}
+.tbtn.icon{padding:0;width:32px}
+.tbtn[aria-pressed="true"]{background:var(--amber);color:var(--on-amber)}
+
+/* viewfinder */
+.vf{grid-area:vf;position:relative;display:flex;align-items:center;justify-content:center;min-height:0;border-radius:6px;background:var(--well);overflow:hidden}
+.shot{position:relative;flex:none}
+.shot.framed{background:var(--paper)}
+.img{position:relative;touch-action:none;-webkit-touch-callout:none;-webkit-user-select:none;user-select:none;cursor:grab}
+#view{display:block;width:100%;height:100%;-webkit-touch-callout:none}
+.readout{position:absolute;left:10px;top:9px;right:64px;display:flex;flex-direction:column;gap:3px;pointer-events:none;text-shadow:0 1px 8px var(--shade)}
+.readout b{font:700 12px/1 var(--f-dial);letter-spacing:.18em;color:var(--amber)}
+.readout span{font:700 19px/1 var(--f-dial);letter-spacing:.05em;color:var(--on-photo);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ro-ratio{position:absolute;right:10px;top:9px;font-size:11px;color:var(--on-photo);opacity:.85;text-shadow:0 1px 6px var(--shade);pointer-events:none}
+.stamp{position:absolute;pointer-events:none;color:var(--stamp);font-family:var(--f-dial);font-weight:700;letter-spacing:.08em;white-space:nowrap;text-shadow:0 0 .35em var(--stamp)}
+.badge{position:absolute;left:50%;top:10px;transform:translateX(-50%);padding:4px 10px;border-radius:12px;background:var(--shade);color:var(--on-photo);font-size:12px;pointer-events:none}
+.pill{position:absolute;left:50%;top:10px;transform:translateX(-50%);height:30px;padding:0 14px;border-radius:15px;background:var(--shade);color:var(--on-photo);font-size:13px;-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)}
+.caption{position:absolute;left:0;right:0;bottom:0;padding:28px 12px 10px;background:linear-gradient(to top,var(--shade),transparent);color:var(--on-photo);font-size:12.5px;line-height:1.45;pointer-events:none;opacity:0;transition:opacity .35s}
+.caption.show{opacity:1}
+.caption b{font-weight:600;margin-right:6px}
+.lenses{position:absolute;left:50%;bottom:12px;transform:translateX(-50%);display:flex;gap:6px;padding:4px;border-radius:20px;background:var(--shade);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)}
+.lenses button{width:32px;height:32px;border-radius:50%;font:700 12px/1 var(--f-mono);color:var(--on-photo)}
+.lenses button[aria-pressed="true"]{background:var(--amber);color:var(--on-amber)}
+.framebar{position:absolute;left:0;right:0;bottom:0;display:flex;justify-content:space-between;align-items:center;color:var(--paper-ink);pointer-events:none}
+.framebar div{display:flex;flex-direction:column;gap:.25em;min-width:0}
+.framebar .fb-r{text-align:right;align-items:flex-end}
+.framebar b{font-family:var(--f-dial);font-weight:700;letter-spacing:.06em;line-height:1}
+.framebar span{color:var(--paper-mute);line-height:1;white-space:nowrap}
+.busy{position:absolute;inset:0;display:grid;place-items:center;background:var(--shade);color:var(--on-photo);font-size:13px;z-index:3}
+.flash{position:absolute;inset:0;background:var(--on-photo);opacity:0;pointer-events:none}
+.flash.go{animation:flash .28s ease-out}
+@keyframes flash{0%{opacity:.85}100%{opacity:0}}
+.vf-msg{padding:24px;text-align:center;color:var(--mute);max-width:32ch}
+#video{position:absolute;width:2px;height:2px;opacity:0;pointer-events:none}
+
+/* chips */
+.row{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+.row::-webkit-scrollbar,.strip::-webkit-scrollbar{display:none}
+.scenes{grid-area:scenes}
+.scenes button{flex:none;height:30px;padding:0 13px;border-radius:15px;border:1px solid var(--line);color:var(--mute);font-size:13px}
+.scenes button[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:var(--body)}
+.brands{grid-area:brands;gap:16px;border-bottom:1px solid var(--line)}
+.brands button{flex:none;padding:4px 0 7px;font-size:13px;color:var(--mute);border-bottom:2px solid transparent;margin-bottom:-1px;display:inline-flex;align-items:baseline;gap:3px}
+.brands button small{font:500 10px/1 var(--f-mono);color:var(--mute);opacity:.8}
+.brands button[aria-pressed="true"]{color:var(--ink);border-bottom-color:var(--amber)}
+.brands button.dim{opacity:.38}
+
+/* film strip of looks */
+.strip{grid-area:strip;display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch;min-height:112px;align-items:flex-start}
+.look{flex:none;width:60px;display:flex;flex-direction:column;gap:4px;text-align:left}
+.look canvas{width:60px;height:80px;border-radius:4px;background:var(--raise);display:block}
+.look .lb{font:700 9px/1 var(--f-dial);letter-spacing:.12em;color:var(--mute);text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.look .ln{font-size:11px;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.look[aria-pressed="true"] canvas{box-shadow:0 0 0 2px var(--amber)}
+.look[aria-pressed="true"] .ln{color:var(--amber)}
+.empty{margin:0;padding:12px 2px;color:var(--mute);font-size:13px}
+
+/* dock */
+.dock{grid-area:dock;display:flex;flex-direction:column;gap:4px}
+.strength{display:grid;grid-template-columns:auto minmax(0,1fr) 30px;align-items:center;gap:10px;font-size:12px;color:var(--mute)}
+.strength output{text-align:right;color:var(--ink);font-size:12px}
+input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:26px;margin:0;background:transparent;--p:100%}
+input[type=range]::-webkit-slider-runnable-track{height:2px;border-radius:1px;background:linear-gradient(to right,var(--amber) var(--p),var(--line) var(--p))}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;margin-top:-8px;border-radius:50%;background:var(--ink);box-shadow:0 1px 4px var(--shade)}
+input[type=range]::-moz-range-track{height:2px;background:var(--line)}
+input[type=range]::-moz-range-progress{height:2px;background:var(--amber)}
+input[type=range]::-moz-range-thumb{width:18px;height:18px;border:0;border-radius:50%;background:var(--ink)}
+.shutter-row{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;height:66px}
+.side{justify-self:center;display:flex;flex-direction:column;align-items:center;gap:3px;width:60px;font-size:11px;color:var(--mute)}
+.side svg{width:26px;height:26px;color:var(--ink)}
+.shutter{width:66px;height:66px;border-radius:50%;border:3px solid var(--ink);display:grid;place-items:center}
+.shutter span{width:52px;height:52px;border-radius:50%;background:var(--ink);transition:transform .12s}
+.shutter:active span{transform:scale(.88)}
+.shutter.live span{background:var(--on-photo)}
+
+/* sheets */
+.scrim{position:fixed;inset:0;z-index:20;background:var(--shade)}
+.sheet{position:fixed;left:0;right:0;bottom:0;z-index:21;max-width:560px;margin:0 auto;max-height:88%;overflow-y:auto;background:var(--panel);border-radius:14px 14px 0 0;
+  padding-top:12px;padding-bottom:calc(16px + env(safe-area-inset-bottom,0px));padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.sheet header{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+.sheet h2{margin:0;font-size:16px;font-weight:600}
+.sheet header button{color:var(--amber);font-size:15px;padding:6px 0 6px 12px}
+.set{display:flex;flex-direction:column}
+.set-row{display:flex;align-items:center;justify-content:space-between;gap:16px;min-height:50px;border-top:1px solid var(--line)}
+.set-row>span{display:flex;flex-direction:column;gap:2px;flex:none}
+.set-row small{font-size:11px;color:var(--mute)}
+.set-row input[type=range]{max-width:200px}
+.set-row output{width:44px;text-align:right;font-size:12px;color:var(--mute)}
+.seg{display:flex;gap:4px;flex-wrap:wrap;justify-content:flex-end}
+.seg button{height:30px;padding:0 10px;border-radius:8px;background:var(--raise);font-size:12px}
+.seg button[aria-pressed="true"]{background:var(--amber);color:var(--on-amber)}
+.switch{-webkit-appearance:none;appearance:none;width:46px;height:28px;border-radius:14px;background:var(--line);position:relative;flex:none;margin:0;transition:background .2s;cursor:pointer}
+.switch::after{content:"";position:absolute;left:3px;top:3px;width:22px;height:22px;border-radius:50%;background:var(--ink);transition:transform .2s}
+.switch:checked{background:var(--amber)}
+.switch:checked::after{transform:translateX(18px)}
+.note{margin:12px 0 0;font-size:11.5px;line-height:1.6;color:var(--mute)}
+.save-img{display:block;max-width:100%;max-height:52vh;margin:0 auto;border-radius:4px;-webkit-touch-callout:default;-webkit-user-select:auto;user-select:auto}
+.save-meta{margin:10px 0 2px;text-align:center;font-size:11px;color:var(--mute)}
+.hint{margin:0 0 12px;text-align:center;font-size:13px}
+.save-actions{display:flex;gap:8px}
+.save-actions button{flex:1;height:44px;border-radius:10px;background:var(--raise);font-size:15px}
+.save-actions .primary{background:var(--amber);color:var(--on-amber);font-weight:600}
+.toast{position:fixed;left:50%;top:calc(12px + env(safe-area-inset-top,0px));transform:translateX(-50%);z-index:40;max-width:min(92vw,440px);padding:10px 14px;border-radius:12px;background:var(--raise);color:var(--ink);font-size:13px;line-height:1.5;box-shadow:0 8px 30px var(--shade)}
+
+@media (min-width:900px){
+  .app{max-width:1280px;grid-template-columns:minmax(0,1fr) 400px;column-gap:24px;
+    grid-template-rows:auto auto auto minmax(0,1fr) auto;
+    grid-template-areas:"top top" "vf scenes" "vf brands" "vf strip" "vf dock";padding-block:10px 14px}
+  .scenes,.brands{flex-wrap:wrap;overflow:visible}
+  .brands{row-gap:4px}
+  .strip{flex-wrap:wrap;overflow-x:hidden;overflow-y:auto;align-content:flex-start;gap:12px 10px;min-height:0}
+  .look{width:68px}
+  .look canvas{width:68px;height:90px}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+
+<div class="app" id="app">
+  <header class="top">
+    <div class="mark"><b>银盐</b><span>AgX · FOR iPHONE 17</span></div>
+    <div class="top-actions">
+      <button class="tbtn" id="btnLive" aria-pressed="false" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8.5A2.5 2.5 0 0 1 5.5 6h1.7l1.4-2h6.8l1.4 2h1.7A2.5 2.5 0 0 1 21 8.5v9a2.5 2.5 0 0 1-2.5 2.5h-13A2.5 2.5 0 0 1 3 17.5z"/><circle cx="12" cy="13" r="3.6"/></svg>实时</button>
+      <button class="tbtn mono" id="btnRatio" aria-label="切换画幅">4:3</button>
+      <button class="tbtn icon" id="btnSettings" aria-label="拍摄设置"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/></svg></button>
+    </div>
+  </header>
+
+  <section class="vf" id="vf" aria-label="取景器">
+    <div class="shot" id="shot">
+      <div class="img" id="imgBox">
+        <canvas id="view"></canvas>
+        <div class="readout"><b id="roBrand"></b><span id="roName"></span></div>
+        <span class="ro-ratio mono" id="roRatio"></span>
+        <span class="stamp" id="stamp" hidden></span>
+        <span class="badge" id="badgeCompare" hidden>原图</span>
+        <button class="pill" id="btnBackLive" hidden>返回取景</button>
+        <div class="caption" id="caption"></div>
+        <div class="lenses" id="lenses" hidden></div>
+        <div class="flash" id="flash"></div>
+      </div>
+      <div class="framebar" id="framebar" hidden>
+        <div><b id="fbBrand"></b><span id="fbLook"></span></div>
+        <div class="fb-r"><b>SHOT ON iPHONE</b><span class="mono" id="fbDate"></span></div>
+      </div>
+    </div>
+    <div class="busy" id="busy" hidden>正在处理…</div>
+    <video id="video" playsinline muted autoplay></video>
+  </section>
+
+  <nav class="row scenes" id="scenes" aria-label="拍摄场景"></nav>
+  <nav class="row brands" id="brands" aria-label="相机品牌"></nav>
+  <div class="strip" id="strip" aria-label="滤镜"></div>
+
+  <div class="dock">
+    <label class="strength" for="intensity"><span>强度</span><input id="intensity" type="range" min="0" max="100" value="100"><output id="intensityOut" class="mono">100</output></label>
+    <div class="shutter-row">
+      <button class="side" id="btnAlbum"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2.5"/><path d="m3 16 5-5 4 4 3-3 6 6"/><circle cx="16" cy="8.5" r="1.6"/></svg><span>相册</span></button>
+      <button class="shutter" id="btnShutter" aria-label="拍照"><span></span></button>
+      <button class="side" id="btnRight"><svg id="icoRight" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"></svg><span id="lblRight">保存</span></button>
+    </div>
+  </div>
+</div>
+
+<input type="file" id="fileCamera" class="vh" accept="image/*" capture="environment" tabindex="-1">
+<input type="file" id="fileAlbum" class="vh" accept="image/*" tabindex="-1">
+
+<div class="scrim" id="scrim" hidden></div>
+<section class="sheet" id="sheetSettings" role="dialog" aria-label="拍摄设置" hidden>
+  <header><h2>拍摄设置</h2><button data-close>完成</button></header>
+  <div class="set">
+    <div class="set-row"><span>画幅</span><div class="seg" id="segRatio"></div></div>
+    <label class="set-row" for="grainMul"><span>颗粒<small>滤镜自带颗粒的倍数</small></span><input type="range" id="grainMul" min="0" max="200" value="100"><output class="mono" id="grainOut">100%</output></label>
+    <label class="set-row" for="vigMul"><span>暗角<small>滤镜自带暗角的倍数</small></span><input type="range" id="vigMul" min="0" max="200" value="100"><output class="mono" id="vigOut">100%</output></label>
+    <label class="set-row" for="optStamp"><span>日期水印<small>胶片机式橙色日期</small></span><input type="checkbox" class="switch" id="optStamp"></label>
+    <label class="set-row" for="optFrame"><span>白边相框<small>底部印上品牌与滤镜名</small></span><input type="checkbox" class="switch" id="optFrame"></label>
+    <div class="set-row"><span>输出尺寸</span><div class="seg" id="segSize"><button data-v="12">1200 万像素</button><button data-v="16">1600 万像素</button></div></div>
+  </div>
+  <p class="note" id="noteDevice"></p>
+  <p class="note">滤镜参考各品牌公开的色彩风格调校而成，并非官方出品。按住画面可对比原图，左右滑动画面可切换滤镜。</p>
+</section>
+<section class="sheet" id="sheetSave" role="dialog" aria-label="保存照片" hidden>
+  <header><h2>照片已生成</h2><button data-close>关闭</button></header>
+  <img class="save-img" id="saveImg" alt="套用滤镜后的照片">
+  <p class="save-meta mono" id="saveMeta"></p>
+  <p class="hint">长按图片，选择「存储到照片」即可存入相册</p>
+  <div class="save-actions"><button class="primary" id="btnDoSave">保存图片</button><button id="btnShare" hidden>分享…</button></div>
+</section>
+<div class="toast" id="toast" role="status" hidden></div>
+
+<script>
+(() => {
+'use strict';
+const $ = s => document.querySelector(s);
+
+/* ---------- scenes, brands, looks ---------- */
+const SCENES = [
+  {id:'all', n:'全部'},
+  {id:'portrait', n:'人像', tip:'建议 2× 镜头（17 Pro 可用 4×），侧逆光、背景留暗更出效果'},
+  {id:'landscape', n:'风景', tip:'建议 0.5× 超广角或 1× 主摄，蓝天绿地用正片类滤镜最出彩'},
+  {id:'street', n:'街拍', tip:'建议 1× 或 2×，硬调彩色与黑白最有故事感'},
+  {id:'night', n:'夜景', tip:'建议 1× 主摄（进光最多）并保持稳定，霓虹灯下试试 CineStill 800T'},
+  {id:'food', n:'美食', tip:'建议 2× 俯拍或 45° 斜拍，高饱和暖调让食物更诱人'},
+  {id:'arch', n:'建筑', tip:'0.5× 拍全貌、2× 拍细节，局部反差类滤镜能强化线条'},
+  {id:'daily', n:'日常', tip:'1× 随手拍，胶卷类滤镜自带生活氛围'},
+  {id:'bw', n:'黑白', tip:'光影分明、反差大的场景最适合黑白'}
+];
+const BRANDS = [
+  {id:'all', n:'全部'},
+  {id:'fuji', n:'富士', en:'FUJIFILM'}, {id:'leica', n:'徕卡', en:'LEICA'}, {id:'ricoh', n:'理光', en:'RICOH GR'},
+  {id:'pentax', n:'宾得', en:'PENTAX'}, {id:'canon', n:'佳能', en:'CANON'}, {id:'nikon', n:'尼康', en:'NIKON'},
+  {id:'sony', n:'索尼', en:'SONY'}, {id:'hassel', n:'哈苏', en:'HASSELBLAD'}, {id:'olympus', n:'奥林巴斯', en:'OLYMPUS'},
+  {id:'lumix', n:'松下', en:'LUMIX'}, {id:'kodak', n:'柯达', en:'KODAK'}, {id:'film', n:'经典胶片', en:'FILM'}
+];
+// p: ev temp tint con blacks whites sat vib clar | lift gamma gain [r,g,b] | hsl {r o y g a b p m: [hue°, sat, lum]}
+//    sh / hi split tone [r,g,b,amount] | mono mix | grain gsize vig | glow gth gsoft gcol
+const LOOKS = [
+  {id:'none', b:null, n:'原图', en:'ORIGINAL', sc:[], d:'不加滤镜的 iPhone 原始色彩', p:{}},
+
+  {id:'f-provia', b:'fuji', n:'PROVIA', en:'PROVIA / 标准', sc:['landscape','daily'], d:'富士标准正片，色彩准确、反差适中，什么都能拍', p:{con:1.08,sat:1.06,hsl:{b:[0,.05,-.03],g:[-2,.05,0]}}},
+  {id:'f-velvia', b:'fuji', n:'Velvia', en:'VELVIA / 鲜艳', sc:['landscape','food'], d:'高饱和高反差的风光正片，蓝天更深、绿叶更浓', p:{con:1.25,sat:1.32,vib:.15,clar:.08,hsl:{r:[2,.12,-.04],o:[0,.05,0],y:[-3,.1,-.02],g:[-4,.2,-.06],a:[0,.15,-.05],b:[4,.18,-.12],p:[6,.15,-.05],m:[0,.1,0]},sh:[.45,.25,.6,.12]}},
+  {id:'f-astia', b:'fuji', n:'ASTIA', en:'ASTIA / 柔和', sc:['portrait','daily'], d:'肤色柔和、高光细腻，饱和度适中的人像正片', p:{ev:.05,con:.97,whites:.985,sat:1.06,clar:-.12,hsl:{o:[1,-.06,.05],r:[0,-.04,.03],b:[0,.08,0],g:[0,.05,0]}}},
+  {id:'f-chrome', b:'fuji', n:'Classic Chrome', en:'CLASSIC CHROME', sc:['street','daily','arch'], d:'低饱和、硬朗影调的纪实色彩，蓝色偏青、红色内敛', p:{con:1.14,blacks:.015,sat:.8,temp:.02,gamma:[1,1,.98],hsl:{r:[-3,-.15,-.05],o:[0,-.06,0],y:[-6,-.25,-.02],g:[-14,-.35,-.06],a:[-8,-.2,-.03],b:[-14,-.28,-.08],p:[-18,-.3,0],m:[-6,-.3,0]},sh:[.25,.45,.5,.1],hi:[.9,.8,.62,.06]}},
+  {id:'f-classicneg', b:'fuji', n:'Classic Neg.', en:'CLASSIC NEG.', sc:['street','daily'], d:'仿 Superia 负片：硬调、青色阴影与暖调高光，街头氛围拉满', p:{con:1.22,blacks:.02,whites:.97,sat:.95,lift:[0,.015,.03],gain:[1.02,1,.95],hsl:{r:[-6,.05,-.06],o:[-2,-.02,0],y:[-6,-.18,-.04],g:[16,-.25,-.06],a:[-4,-.05,-.03],b:[-6,-.1,-.05],m:[-8,0,0]},sh:[.2,.5,.55,.12],hi:[1,.78,.6,.07]}},
+  {id:'f-nostalgic', b:'fuji', n:'Nostalgic Neg.', en:'NOSTALGIC NEG.', sc:['portrait','daily','street'], d:'琥珀色高光、柔和阴影，来自 70 年代美国新彩色摄影', p:{ev:.03,con:1.05,blacks:.03,sat:.95,temp:.05,hsl:{o:[2,.04,.02],y:[-4,.05,0],b:[-6,-.12,0],g:[-6,-.1,0]},hi:[1,.72,.38,.16],sh:[.5,.42,.4,.04]}},
+  {id:'f-proneghi', b:'fuji', n:'PRO Neg. Hi', en:'PRO NEG. HI', sc:['portrait'], d:'影楼人像负片，适度反差让轮廓更立体，肤色自然', p:{con:1.08,clar:-.05,hsl:{o:[0,-.05,.03],r:[0,-.03,0]}}},
+  {id:'f-pronegstd', b:'fuji', n:'PRO Neg. Std', en:'PRO NEG. STD', sc:['portrait'], d:'最柔和的人像影调，过渡平滑，适合棚拍和柔光', p:{con:.9,blacks:.01,sat:.9,clar:-.15,hsl:{o:[0,-.07,.04],g:[0,-.05,0]}}},
+  {id:'f-eterna', b:'fuji', n:'ETERNA', en:'ETERNA / 影院', sc:['night','street'], d:'电影胶片质感：低反差低饱和，阴影带一点青', p:{con:.86,blacks:.04,whites:.96,sat:.74,hsl:{b:[-6,-.1,0],g:[10,-.2,0],o:[0,-.05,0]},sh:[.25,.5,.5,.14],hi:[.95,.85,.7,.04]}},
+  {id:'f-bleach', b:'fuji', n:'Bleach Bypass', en:'ETERNA BLEACH BYPASS', sc:['street','arch','night'], d:'跳漂白工艺：低饱和、高反差，金属般冷硬', p:{con:1.35,sat:.42,clar:.2,temp:-.02,sh:[.4,.5,.55,.05]}},
+  {id:'f-reala', b:'fuji', n:'REALA ACE', en:'REALA ACE', sc:['daily','landscape','food'], d:'忠实还原的同时更清爽锐利，富士最新的胶片模拟', p:{con:1.12,sat:1.04,clar:.05,hsl:{o:[1,0,.02],b:[0,.05,-.02],g:[-3,.05,0]}}},
+  {id:'f-acros', b:'fuji', n:'ACROS', en:'ACROS', sc:['bw','street','arch','portrait'], d:'细腻颗粒与深邃黑位，富士最受喜爱的黑白', p:{mono:1,mix:[.33,.56,.11],con:1.18,clar:.08,grain:.25,gsize:.8}},
+  {id:'f-acrosr', b:'fuji', n:'ACROS+R', en:'ACROS + R FILTER', sc:['bw','landscape'], d:'加红滤镜的黑白：蓝天压暗、云层跳出', p:{mono:1,mix:[.62,.33,.05],con:1.22,clar:.1,grain:.22,gsize:.8}},
+  {id:'f-superia', b:'fuji', n:'Superia 400', en:'SUPERIA 400', sc:['daily','street'], d:'富士家用负片：绿色偏青、高光略带洋红，颗粒感明显', p:{con:1.1,blacks:.025,sat:1.02,lift:[0,.02,.02],hsl:{g:[14,-.05,-.03],y:[-4,-.05,0],r:[-4,.05,0],b:[-4,0,-.03]},hi:[1,.8,.85,.06],grain:.35}},
+  {id:'f-400h', b:'fuji', n:'PRO 400H', en:'PRO 400H', sc:['portrait','daily'], d:'日系清新的代表：粉嫩肤色、薄荷绿与淡青天空', p:{ev:.12,con:.9,blacks:.035,sat:.86,temp:-.02,hsl:{o:[2,-.1,.06],r:[-4,-.1,.03],g:[22,-.25,.05],y:[10,-.2,.03],a:[0,-.1,.03],b:[-8,-.15,.04]},sh:[.3,.55,.55,.1],hi:[1,.88,.9,.06],grain:.2}},
+  {id:'f-c200', b:'fuji', n:'C200', en:'FUJICOLOR C200', sc:['daily','landscape'], d:'淡雅偏绿青的色调，夏日旅行感', p:{ev:.08,con:.98,blacks:.03,sat:.95,tint:-.02,temp:-.01,lift:[0,.02,.015],hsl:{g:[12,-.05,.02],y:[-2,-.08,0],b:[-6,0,0]},grain:.3}},
+
+  {id:'l-authentic', b:'leica', n:'徕卡经典', en:'LEICA AUTHENTIC', sc:['street','daily','arch'], d:'还原徕卡镜头的原生质感：浓郁暗部、明显暗角，冷静克制', p:{con:1.2,sat:.93,gamma:[.98,.98,.98],temp:.01,vig:.38,clar:.08,hsl:{b:[-3,-.05,-.06],g:[-6,-.12,-.05],r:[0,.03,-.03]}}},
+  {id:'l-vibrant', b:'leica', n:'徕卡生动', en:'LEICA VIBRANT', sc:['daily','food','landscape'], d:'更明亮鲜活的徕卡色彩，适合旅行与美食', p:{ev:.08,con:1.1,sat:1.14,vib:.12,vig:.15,hsl:{o:[1,.05,.02],y:[0,.08,0],b:[0,.08,-.03]}}},
+  {id:'l-standard', b:'leica', n:'徕卡标准', en:'LEICA STANDARD', sc:['daily','landscape'], d:'徕卡相机直出标准色，层次通透', p:{con:1.1,sat:1.03,clar:.06,vig:.1}},
+  {id:'l-natural', b:'leica', n:'徕卡自然', en:'LEICA NATURAL', sc:['portrait','daily'], d:'更低饱和、更平滑的影调，肤色温润', p:{con:.98,sat:.9,temp:.02,clar:-.05,hsl:{o:[0,-.04,.03]}}},
+  {id:'l-chrome', b:'leica', n:'Leica Chrome', en:'LEICA CHROME', sc:['street','arch'], d:'降饱和、硬反差，色彩带金属光泽的铬系正片', p:{con:1.25,sat:.72,temp:-.01,clar:.12,vig:.2,hsl:{r:[-4,-.05,-.05],g:[-10,-.3,-.05],b:[-10,-.15,-.1],y:[-5,-.2,0]},sh:[.3,.42,.5,.1]}},
+  {id:'l-classic', b:'leica', n:'Leica Classic', en:'LEICA CLASSIC', sc:['street','portrait'], d:'复古暖调、轻微褪色，像老徕卡 M 机里的反转片', p:{con:1.06,blacks:.035,sat:.85,temp:.06,grain:.18,vig:.25,hsl:{b:[-8,-.2,0],g:[-10,-.2,0],o:[0,.02,0]},hi:[1,.8,.55,.1]}},
+  {id:'l-eternal', b:'leica', n:'Leica Eternal', en:'LEICA ETERNAL', sc:['night','street','portrait'], d:'电影感的青橙色调，低反差、暗部带青', p:{con:.92,blacks:.03,sat:.85,vig:.2,hsl:{o:[2,.08,.02],b:[-12,-.05,-.03],a:[-6,-.05,0],g:[14,-.2,0]},sh:[.15,.45,.55,.2],hi:[1,.75,.5,.12]}},
+  {id:'l-mono', b:'leica', n:'Monochrom', en:'LEICA MONOCHROM', sc:['bw','portrait','street'], d:'致敬 M Monochrom：灰阶丰富、过渡细腻', p:{mono:1,con:1.06,grain:.1,vig:.15}},
+  {id:'l-monohc', b:'leica', n:'黑白高对比', en:'LEICA MONO HC', sc:['bw','street','arch'], d:'浓黑与亮白的强烈对比，街头纪实经典', p:{mono:1,mix:[.35,.55,.1],con:1.5,clar:.25,vig:.3,grain:.15}},
+  {id:'l-selenium', b:'leica', n:'Selenium', en:'LEICA SELENIUM', sc:['bw','portrait','arch'], d:'带冷紫调的黑白，如硒调银盐照片', p:{mono:1,con:1.12,grain:.08,sh:[.45,.4,.6,.35],hi:[.85,.85,.9,.1]}},
+
+  {id:'r-positive', b:'ricoh', n:'正片', en:'POSITIVE FILM', sc:['street','landscape','daily'], d:'GR 最出名的正片：高饱和、蓝色深邃、反差强烈', p:{con:1.22,sat:1.22,vig:.1,hsl:{r:[-2,.1,-.05],y:[-4,.05,0],g:[-6,.1,-.05],a:[-6,.1,-.05],b:[-4,.12,-.12]},sh:[.25,.45,.6,.08],hi:[1,.88,.7,.05]}},
+  {id:'r-negative', b:'ricoh', n:'负片', en:'NEGATIVE FILM', sc:['street','portrait','daily'], d:'低反差、柔和的负片感，阴影泛青、高光偏暖', p:{con:.9,blacks:.05,whites:.97,sat:.8,lift:[0,.015,.025],hsl:{g:[12,-.15,0],y:[-2,-.1,0],b:[-6,-.1,0],o:[0,.02,.02]},hi:[1,.82,.6,.08]}},
+  {id:'r-hicon', b:'ricoh', n:'高对比黑白', en:'HI-CONTRAST B&W', sc:['bw','street'], d:'森山大道式的粗粝黑白：硬反差、重颗粒', p:{mono:1,mix:[.35,.55,.1],con:1.75,clar:.35,grain:.5,gsize:1.3,vig:.35}},
+  {id:'r-bleach', b:'ricoh', n:'漂白效果', en:'BLEACH BYPASS', sc:['street','arch'], d:'去色后加强反差，冷峻的金属质感', p:{con:1.3,sat:.4,clar:.15,sh:[.4,.5,.55,.06]}},
+  {id:'r-retro', b:'ricoh', n:'复古', en:'RETRO', sc:['daily','street'], d:'泛黄褪色的老照片感', p:{con:.95,blacks:.07,whites:.93,sat:.7,temp:.08,gain:[1.02,1,.9],grain:.25,vig:.25,hsl:{b:[-10,-.3,0],g:[-15,-.2,0]},hi:[1,.85,.55,.1]}},
+  {id:'r-cross', b:'ricoh', n:'交叉冲印', en:'CROSS PROCESS', sc:['daily','street'], d:'正片负冲：阴影偏蓝、高光偏黄，色彩夸张', p:{con:1.25,sat:1.2,lift:[0,.02,.12],gain:[1.05,1.03,.82],gamma:[1.08,1.05,.95],vig:.2,hsl:{g:[-10,.1,0]}}},
+  {id:'r-softmono', b:'ricoh', n:'软调黑白', en:'SOFT MONOTONE', sc:['bw','portrait'], d:'柔和灰调的黑白，适合静谧人像', p:{mono:1,con:.85,blacks:.04,clar:-.15}},
+
+  {id:'p-miyabi', b:'pentax', n:'雅 Miyabi', en:'MIYABI', sc:['landscape','portrait'], d:'日式雅致的色彩：天空与绿植清丽、肤色通透', p:{sat:.98,hsl:{b:[-4,.05,.02],g:[10,-.1,.02],y:[0,-.05,.02],o:[0,-.03,.03],m:[0,.05,0]},hi:[.9,.9,1,.04],sh:[.4,.4,.6,.04]}},
+  {id:'p-satobi', b:'pentax', n:'里美 Satobi', en:'SATOBI', sc:['landscape','street'], d:'宾得独有的深沉色调：低调暗部，带青蓝气息的乡野风景', p:{ev:-.05,con:1.12,gamma:[.96,.97,.99],sat:.85,vig:.2,hsl:{g:[10,-.15,-.06],y:[-4,-.1,-.04],b:[-4,-.05,-.05],r:[0,.02,-.04]},sh:[.25,.4,.6,.16],hi:[1,.85,.7,.05]}},
+  {id:'p-ginsen', b:'pentax', n:'银选 Ginsen', en:'GINSEN', sc:['street','arch'], d:'类似银残工艺，低饱和与硬朗的银色调', p:{con:1.28,sat:.5,clar:.15,sh:[.45,.45,.5,.03]}},
+  {id:'p-reversal', b:'pentax', n:'反转片', en:'REVERSAL FILM', sc:['landscape','food'], d:'浓郁饱和、色彩厚重的宾得反转片', p:{con:1.2,sat:1.28,clar:.05,hsl:{b:[0,.1,-.08],g:[-4,.1,-.04],r:[0,.1,-.03]}}},
+
+  {id:'c-standard', b:'canon', n:'标准', en:'STANDARD', sc:['daily','food'], d:'佳能直出色：讨喜的暖调与鲜明色彩', p:{con:1.1,sat:1.1,temp:.02,clar:.05,hsl:{o:[2,.03,.02],r:[0,.05,0],g:[-3,.05,0]}}},
+  {id:'c-portrait', b:'canon', n:'人像', en:'PORTRAIT', sc:['portrait'], d:'传说中的“佳能肤色”：红润透亮、柔和细腻', p:{ev:.05,sat:1.02,temp:.03,tint:.01,clar:-.15,hsl:{o:[3,-.04,.07],r:[-2,-.04,.04],m:[0,-.05,0]}}},
+  {id:'c-landscape', b:'canon', n:'风光', en:'LANDSCAPE', sc:['landscape'], d:'蓝绿更饱和、细节更锐利的风光风格', p:{con:1.14,sat:1.22,clar:.2,hsl:{g:[-4,.18,0],a:[0,.15,0],b:[0,.18,-.05],y:[0,.05,0]}}},
+  {id:'c-detail', b:'canon', n:'精致细节', en:'FINE DETAIL', sc:['arch','food','landscape'], d:'强化纹理与边缘，建筑和静物细节分明', p:{con:1.06,sat:1.02,clar:.35}},
+  {id:'c-ccd', b:'canon', n:'IXUS CCD', en:'IXUS CCD', sc:['daily','night','portrait'], d:'千禧年 CCD 卡片机：偏冷、通透、带点闪光灯味', p:{ev:.15,con:1.15,sat:1.12,temp:-.06,tint:-.01,clar:.12,grain:.15,gsize:.7,glow:.12,gth:.65,hsl:{b:[-6,.1,.03],a:[0,.1,0],o:[0,-.05,.04]}}},
+
+  {id:'n-standard', b:'nikon', n:'标准', en:'STANDARD', sc:['daily'], d:'尼康标准优化校准，反差扎实、色彩准确', p:{con:1.1,sat:1.05,clar:.06,hsl:{g:[-2,.05,0],y:[2,0,0]}}},
+  {id:'n-vivid', b:'nikon', n:'鲜艳', en:'VIVID', sc:['landscape','food'], d:'更饱和更明快，尼康经典的黄绿风光色', p:{con:1.16,sat:1.28,hsl:{g:[-6,.15,0],y:[-2,.12,0],b:[0,.12,-.04],r:[0,.1,0]}}},
+  {id:'n-portrait', b:'nikon', n:'人像', en:'PORTRAIT', sc:['portrait'], d:'肤色柔和、反差降低，人像更干净', p:{con:.96,sat:.97,clar:-.1,hsl:{o:[0,-.06,.05],r:[0,-.04,.02]}}},
+  {id:'n-richportrait', b:'nikon', n:'浓郁人像', en:'RICH TONE PORTRAIT', sc:['portrait','night'], d:'保留肤色质感的同时加深背景色彩，人物更立体', p:{con:1.1,sat:1.08,vig:.15,clar:.02,hsl:{o:[0,-.02,.04],r:[0,.08,-.04],g:[0,.1,-.08],b:[0,.1,-.08],a:[0,.08,-.06]}}},
+  {id:'n-landscape', b:'nikon', n:'风景', en:'LANDSCAPE', sc:['landscape'], d:'强调蓝天绿树，空气感通透', p:{con:1.12,sat:1.2,clar:.15,hsl:{g:[-2,.15,0],b:[2,.2,-.06],a:[0,.1,0]}}},
+  {id:'n-dream', b:'nikon', n:'梦幻', en:'DREAM', sc:['portrait','daily'], d:'明亮柔和的高调氛围，适合逆光与花卉', p:{ev:.25,con:.82,blacks:.05,sat:.85,clar:-.2,glow:.25,gth:.55,gsoft:.25,hsl:{o:[2,-.05,.03],m:[0,.05,.03]},hi:[1,.85,.92,.08]}},
+  {id:'n-dramatic', b:'nikon', n:'戏剧', en:'DRAMATIC', sc:['arch','landscape','street'], d:'压暗并强化局部反差，天空与建筑更有张力', p:{ev:-.1,con:1.3,sat:.85,clar:.45,vig:.3}},
+  {id:'n-denim', b:'nikon', n:'牛仔布', en:'DENIM', sc:['street','daily'], d:'整体染上靛蓝调，冷静又复古', p:{con:1.05,sat:.55,blacks:.03,sh:[.2,.35,.7,.3],hi:[.7,.8,1,.12]}},
+
+  {id:'s-st', b:'sony', n:'ST 标准', en:'CREATIVE LOOK ST', sc:['daily'], d:'索尼创意外观标准：均衡清爽', p:{con:1.06,sat:1.04}},
+  {id:'s-pt', b:'sony', n:'PT 人像', en:'CREATIVE LOOK PT', sc:['portrait'], d:'柔和反差、自然肤色的人像外观', p:{ev:.04,con:.95,sat:.97,clar:-.1,hsl:{o:[1,-.06,.04]}}},
+  {id:'s-vv', b:'sony', n:'VV 鲜艳', en:'CREATIVE LOOK VV', sc:['landscape','food'], d:'高饱和与高反差的鲜艳色彩', p:{con:1.18,sat:1.3,hsl:{b:[0,.1,-.04]}}},
+  {id:'s-vv2', b:'sony', n:'VV2 鲜明', en:'CREATIVE LOOK VV2', sc:['landscape','food','daily'], d:'鲜艳且明亮，色彩更清爽通透', p:{ev:.08,con:1.12,sat:1.25,vib:.1,clar:.08}},
+  {id:'s-fl', b:'sony', n:'FL 胶片', en:'CREATIVE LOOK FL', sc:['street','daily','night'], d:'最受欢迎的索尼外观：低饱和、偏青、硬朗的电影胶片感', p:{con:1.12,blacks:.02,sat:.78,lift:[0,.02,.03],gain:[1.02,1,.97],hsl:{g:[12,-.2,-.04],b:[-8,-.1,-.04],o:[0,.03,0],y:[-4,-.1,0]},sh:[.2,.45,.5,.1]}},
+  {id:'s-in', b:'sony', n:'IN 哑光', en:'CREATIVE LOOK IN', sc:['daily','portrait'], d:'哑光质感：抬升黑位、低饱和，像即影即有', p:{con:.92,blacks:.07,whites:.95,sat:.75,hsl:{b:[-6,-.1,0]},hi:[1,.9,.75,.05]}},
+  {id:'s-sh', b:'sony', n:'SH 柔和高调', en:'CREATIVE LOOK SH', sc:['portrait','daily'], d:'明亮通透、轻盈柔和的高调外观', p:{ev:.28,con:.85,blacks:.02,sat:.9,temp:-.02,clar:-.1,hsl:{o:[2,-.05,.03]},hi:[1,.92,.95,.05]}},
+  {id:'s-cinetone', b:'sony', n:'S-Cinetone', en:'S-CINETONE', sc:['portrait','night','street'], d:'源自索尼电影机：肤色温润、高光柔和', p:{con:.96,whites:.97,sat:.92,hsl:{o:[1,.03,.03],b:[-4,-.05,0],g:[6,-.1,0]},hi:[1,.82,.65,.06]}},
+  {id:'s-bw', b:'sony', n:'BW 黑白', en:'CREATIVE LOOK BW', sc:['bw','street'], d:'标准索尼黑白外观', p:{mono:1,con:1.15}},
+
+  {id:'h-hncs', b:'hassel', n:'HNCS 自然', en:'NATURAL COLOUR SOLUTION', sc:['landscape','portrait','food'], d:'哈苏自然色彩方案：不讨好、不夸张，过渡极其平滑', p:{con:1.04,sat:1.02,hsl:{o:[0,-.02,.02],b:[0,.03,-.02]}}},
+  {id:'h-portrait', b:'hassel', n:'哈苏人像', en:'HASSELBLAD PORTRAIT', sc:['portrait'], d:'中画幅般柔和的人像：肤色干净、背景沉稳', p:{con:1.02,sat:.95,clar:-.08,vig:.12,hsl:{o:[1,-.06,.05],r:[0,-.04,.02],g:[0,-.1,-.05],b:[0,-.05,-.05]}}},
+  {id:'h-xpan', b:'hassel', n:'XPan 彩色', en:'XPAN COLOR', sc:['landscape','street'], ratio:'65:24', d:'致敬 XPan 宽幅相机：65:24 电影画幅，色彩浓郁', p:{con:1.12,sat:1.05,vig:.25,grain:.12,hsl:{b:[-4,.05,-.06]}}},
+  {id:'h-xpanbw', b:'hassel', n:'XPan 黑白', en:'XPAN B&W', sc:['bw','street','landscape'], ratio:'65:24', d:'宽幅黑白，适合讲故事的街头构图', p:{mono:1,mix:[.35,.55,.1],con:1.25,vig:.25,grain:.2}},
+
+  {id:'o-vintage', b:'olympus', n:'怀旧', en:'VINTAGE', sc:['daily','street'], d:'暖黄褪色，浓浓的旧时光感', p:{con:.95,blacks:.06,sat:.75,temp:.07,vig:.3,grain:.15,hi:[1,.8,.5,.12],sh:[.5,.35,.3,.06]}},
+  {id:'o-soft', b:'olympus', n:'柔焦', en:'SOFT FOCUS', sc:['portrait'], d:'朦胧柔光，让皮肤和光线都更温柔', p:{ev:.05,con:.92,sat:.95,clar:-.3,glow:.35,gth:.45,gsoft:.45}},
+  {id:'o-pale', b:'olympus', n:'淡雅', en:'PALE & LIGHT COLOR', sc:['portrait','daily'], d:'经典的日系淡彩，清透有空气感', p:{ev:.22,con:.84,blacks:.08,sat:.7,temp:-.03,hsl:{g:[10,-.1,.04],b:[-6,0,.04]},hi:[.92,.95,1,.06]}},
+  {id:'o-grainy', b:'olympus', n:'粗颗粒黑白', en:'GRAINY FILM', sc:['bw','street'], d:'颗粒粗犷、反差强烈的胶片黑白', p:{mono:1,mix:[.33,.55,.12],con:1.55,grain:.7,gsize:1.5,vig:.2}},
+  {id:'o-dramatic', b:'olympus', n:'戏剧色调', en:'DRAMATIC TONE', sc:['arch','landscape'], d:'局部反差夸张，云层与建筑纹理拉满', p:{con:1.1,sat:1.05,clar:.75,vig:.35}},
+  {id:'o-pop', b:'olympus', n:'流行艺术', en:'POP ART', sc:['food','daily'], d:'色彩爆炸般鲜艳，适合美食与街头色块', p:{ev:.05,con:1.15,sat:1.6,vib:.2}},
+
+  {id:'lx-classicneo', b:'lumix', n:'L.ClassicNeo', en:'L.CLASSICNEO', sc:['street','daily'], d:'复古新经典：柔和反差、偏青的怀旧色调', p:{con:.96,blacks:.035,sat:.82,lift:[0,.015,.025],grain:.12,hsl:{g:[12,-.15,0],b:[-8,-.1,0],o:[0,-.02,.02],r:[-4,-.05,0]},hi:[1,.86,.7,.06]}},
+  {id:'lx-monod', b:'lumix', n:'L.Monochrome D', en:'L.MONOCHROME D', sc:['bw','street','arch'], d:'动态黑白：高光与暗部都保留得很漂亮', p:{mono:1,mix:[.32,.57,.11],con:1.3,clar:.2}},
+  {id:'lx-cinev', b:'lumix', n:'Cinelike V2', en:'CINELIKE V2', sc:['night','street'], d:'电影感 V 曲线：对比扎实、色彩自然', p:{con:1.1,sat:.92,blacks:.015,hsl:{o:[0,.03,0]},sh:[.25,.45,.55,.08]}},
+
+  {id:'k-portra400', b:'kodak', n:'Portra 400', en:'PORTRA 400', sc:['portrait','daily'], d:'人像胶卷之王：温暖肤色、宽容的高光、细腻颗粒', p:{ev:.06,con:.92,blacks:.025,sat:.92,temp:.04,grain:.2,hsl:{o:[2,-.05,.04],r:[-2,-.05,.02],y:[-4,-.05,0],g:[8,-.15,0],b:[-6,-.08,.02]},hi:[1,.82,.68,.08]}},
+  {id:'k-portra160', b:'kodak', n:'Portra 160', en:'PORTRA 160', sc:['portrait'], d:'更细腻、更冷静的 Portra，适合光线充足的人像', p:{ev:.05,con:.9,blacks:.02,sat:.88,temp:.01,grain:.1,hsl:{o:[1,-.06,.04],g:[6,-.12,0],b:[-4,-.05,.02]}}},
+  {id:'k-gold200', b:'kodak', n:'Gold 200', en:'GOLD 200', sc:['daily','landscape'], d:'金黄色的阳光感，假日与旅行的颜色', p:{con:1.05,blacks:.02,sat:1.08,temp:.07,grain:.28,hsl:{y:[-4,.12,0],o:[0,.08,.02],b:[-8,-.05,0],g:[-6,0,0]},hi:[1,.8,.45,.1]}},
+  {id:'k-ektar', b:'kodak', n:'Ektar 100', en:'EKTAR 100', sc:['landscape','food'], d:'颗粒极细的彩色负片：红与蓝都极其浓郁', p:{con:1.18,sat:1.32,grain:.06,hsl:{r:[0,.2,-.04],o:[0,.05,0],b:[0,.2,-.08],a:[0,.1,-.04],g:[0,.1,-.03]},sh:[.35,.4,.6,.05]}},
+  {id:'k-ultramax', b:'kodak', n:'UltraMax 400', en:'ULTRAMAX 400', sc:['street','daily'], d:'平价暖调胶卷：饱和、反差稍高，颗粒明显', p:{con:1.12,blacks:.02,sat:1.1,temp:.04,grain:.35,hsl:{r:[0,.08,0],y:[-3,.05,0]},hi:[1,.82,.6,.06]}},
+  {id:'k-colorplus', b:'kodak', n:'ColorPlus 200', en:'COLORPLUS 200', sc:['daily','street'], d:'入门胶卷的复古暖黄，略微褪色', p:{blacks:.04,sat:.95,temp:.06,grain:.3,hsl:{b:[-10,-.15,0],g:[-8,-.1,0],y:[-4,.05,0]},hi:[1,.78,.5,.1]}},
+  {id:'k-kodachrome', b:'kodak', n:'Kodachrome 64', en:'KODACHROME 64', sc:['street','landscape'], d:'《国家地理》时代的经典反转片：浓郁红色、深邃阴影', p:{con:1.24,sat:1.12,temp:.03,gamma:[1,.98,.96],grain:.12,hsl:{r:[2,.2,-.06],o:[0,.05,-.02],y:[-6,.08,0],g:[-8,-.05,-.05],b:[4,.05,-.1],a:[-6,0,-.05]},sh:[.45,.35,.3,.06]}},
+  {id:'k-ektachrome', b:'kodak', n:'Ektachrome E100', en:'EKTACHROME E100', sc:['landscape','arch'], d:'干净偏冷的反转片，蓝天清透', p:{con:1.18,sat:1.12,temp:-.04,grain:.08,hsl:{b:[0,.12,-.04],a:[0,.1,0],g:[0,.05,0]}}},
+  {id:'k-trix', b:'kodak', n:'Tri-X 400', en:'TRI-X 400', sc:['bw','street','portrait'], d:'半个世纪的纪实黑白标杆：硬朗反差与漂亮颗粒', p:{mono:1,mix:[.33,.56,.11],con:1.35,grain:.45,clar:.1}},
+
+  {id:'x-cinestill', b:'film', be:'CINESTILL', n:'CineStill 800T', en:'CINESTILL 800T', sc:['night','street'], d:'夜景神卷：钨丝灯平衡的冷调，光源周围泛起红色光晕', p:{con:1.06,blacks:.02,sat:.95,temp:-.1,grain:.32,glow:.7,gth:.7,gcol:[1,.25,.08],hsl:{o:[4,.05,0],r:[0,.1,0],b:[-6,.05,0],a:[-4,.1,0]},sh:[.2,.45,.6,.15]}},
+  {id:'x-cinestill50', b:'film', be:'CINESTILL', n:'CineStill 50D', en:'CINESTILL 50D', sc:['landscape','daily'], d:'日光电影胶片：清爽、细腻、高光柔和', p:{con:1.02,sat:1.04,temp:-.02,grain:.08,hsl:{b:[-4,.05,0],o:[0,-.03,.03]},hi:[1,.94,.9,.04]}},
+  {id:'x-hp5', b:'film', be:'ILFORD', n:'HP5 Plus', en:'ILFORD HP5 PLUS 400', sc:['bw','street','portrait'], d:'英国经典黑白卷：中等反差、灰阶宽容', p:{mono:1,con:1.18,blacks:.01,grain:.4}},
+  {id:'x-agfa', b:'film', be:'AGFA', n:'Vista 200', en:'AGFA VISTA 200', sc:['daily','street'], d:'爱克发的红与绿：鲜艳又带一点冷调', p:{con:1.1,sat:1.15,grain:.25,hsl:{r:[-3,.15,-.03],g:[4,.12,-.04],b:[-4,.05,0]},sh:[.3,.5,.55,.06]}},
+  {id:'x-polaroid', b:'film', be:'POLAROID', n:'宝丽来 600', en:'POLAROID 600', sc:['portrait','daily'], d:'即影即有：抬升的黑位、奶油般高光与淡青色阴影', p:{ev:.05,con:.92,blacks:.1,whites:.92,sat:.78,temp:.03,lift:[0,.02,.02],vig:.3,glow:.1,gth:.6,gsoft:.15,hsl:{b:[-10,-.15,0],g:[14,-.2,0]},hi:[1,.9,.72,.12],sh:[.3,.5,.5,.1]}},
+  {id:'x-lomo', b:'film', be:'LOMOGRAPHY', n:'Lomo LC-A', en:'LOMO LC-A', sc:['street','daily'], d:'浓郁色彩、强烈暗角、随性的乐趣', p:{con:1.3,sat:1.35,lift:[0,0,.04],gain:[1.03,1.02,.94],vig:.6,grain:.2}}
+];
+const LOOK = Object.fromEntries(LOOKS.map(l => [l.id, l]));
+const BRAND = Object.fromEntries(BRANDS.map(b => [b.id, b]));
+const RATIOS = {'4:3':[4,3], '3:2':[3,2], '1:1':[1,1], '16:9':[16,9], '65:24':[65,24]};
+const RATIO_KEYS = Object.keys(RATIOS);
+const HSL_KEYS = ['r','o','y','g','a','b','p','m'];
+const FR = {side:.035, bottom:.13};
+const DIAL = '"DIN Condensed","Avenir Next Condensed","Arial Narrow",sans-serif';
+const UI = '-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif';
+const MONO = 'ui-monospace,"SF Mono",Menlo,monospace';
+const DEF = {ev:0,temp:0,tint:0,con:1,blacks:0,whites:1,sat:1,vib:0,clar:0,lift:[0,0,0],gamma:[1,1,1],gain:[1,1,1],sh:[.5,.5,.5,0],hi:[.5,.5,.5,0],mono:0,mix:[.3,.59,.11],grain:0,gsize:1,vig:0,glow:0,gth:.7,gsoft:0,gcol:[1,1,1]};
+const resolvedCache = {};
+function resolved(look){
+  if (resolvedCache[look.id]) return resolvedCache[look.id];
+  const r = Object.assign({}, DEF, look.p), h = new Float32Array(24);
+  HSL_KEYS.forEach((k, i) => { const v = (look.p.hsl && look.p.hsl[k]) || [0,0,0]; h.set(v, i * 3); });
+  r.hslArr = h;
+  return (resolvedCache[look.id] = r);
+}
+
+/* ---------- WebGL renderer ---------- */
+const VS = `#version 300 es
+in vec2 aPos; out vec2 vUv;
+void main(){ vUv = aPos * .5 + .5; gl_Position = vec4(aPos, 0., 1.); }`;
+const FS = `#version 300 es
+precision highp float;
+in vec2 vUv; out vec4 o;
+uniform sampler2D uTex; uniform vec2 uTexSize; uniform vec4 uCrop; uniform float uFlip;
+uniform vec2 uOut; uniform float uBaseLod, uAmt;
+uniform float uEV, uTemp, uTint, uCon, uBlacks, uWhites, uSat, uVib, uClar, uMono, uGrain, uGSize, uVig, uGlow, uGTh, uGSoft, uSeed;
+uniform vec3 uLift, uGamma, uGain, uMix, uGCol;
+uniform vec4 uSh, uHi;
+uniform vec3 uHsl[8];
+float luma(vec3 c){ return dot(c, vec3(.2126, .7152, .0722)); }
+vec3 toLin(vec3 c){ return pow(max(c, 0.), vec3(2.2)); }
+vec3 toGam(vec3 c){ return pow(max(c, 0.), vec3(1. / 2.2)); }
+vec3 blurAt(vec2 uv, float lod){
+  lod = max(lod, 0.);
+  vec2 d = exp2(lod) / uTexSize * .85;
+  vec3 s = textureLod(uTex, uv, lod).rgb * .4;
+  s += textureLod(uTex, uv + vec2( d.x,  d.y), lod).rgb * .15;
+  s += textureLod(uTex, uv + vec2(-d.x,  d.y), lod).rgb * .15;
+  s += textureLod(uTex, uv + vec2( d.x, -d.y), lod).rgb * .15;
+  s += textureLod(uTex, uv + vec2(-d.x, -d.y), lod).rgb * .15;
+  return s;
+}
+vec3 rgb2hsv(vec3 c){
+  vec4 K = vec4(0., -1. / 3., 2. / 3., -1.);
+  vec4 p = mix(vec4(c.bg, K.wz), vec4(c.gb, K.xy), step(c.b, c.g));
+  vec4 q = mix(vec4(p.xyw, c.r), vec4(c.r, p.yzx), step(p.x, c.r));
+  float d = q.x - min(q.w, q.y);
+  return vec3(abs(q.z + (q.w - q.y) / (6. * d + 1e-10)), d / (q.x + 1e-10), q.x);
+}
+vec3 hsv2rgb(vec3 c){
+  vec3 p = abs(fract(c.xxx + vec3(1., 2. / 3., 1. / 3.)) * 6. - 3.);
+  return c.z * mix(vec3(1.), clamp(p - 1., 0., 1.), c.y);
+}
+const float HC[9] = float[9](0., 30., 60., 120., 180., 225., 270., 315., 360.);
+vec3 band(float h){
+  for (int i = 0; i < 8; i++) {
+    if (h < HC[i + 1]) {
+      float t = (h - HC[i]) / (HC[i + 1] - HC[i]); t = t * t * (3. - 2. * t);
+      return mix(uHsl[i], uHsl[i == 7 ? 0 : i + 1], t);
+    }
+  }
+  return uHsl[0];
+}
+float sCurve(float x, float a){ x = clamp(x, 0., 1.); float p = pow(x, a); return p / (p + pow(1. - x, a)); }
+float shoulder(float x){ const float k = .82; return x < k ? x : k + (1. - k) * (1. - exp(-(x - k) / (1. - k))); }
+float hash(vec2 p){ vec3 p3 = fract(vec3(p.xyx) * .1031); p3 += dot(p3, p3.yzx + 33.33); return fract((p3.x + p3.y) * p3.z); }
+float vnoise(vec2 p){
+  vec2 i = floor(p), f = fract(p), u = f * f * (3. - 2. * f);
+  return mix(mix(hash(i), hash(i + vec2(1, 0)), u.x), mix(hash(i + vec2(0, 1)), hash(i + vec2(1, 1)), u.x), u.y);
+}
+void main(){
+  vec2 uv = vUv; if (uFlip > .5) uv.x = 1. - uv.x;
+  vec2 suv = uCrop.xy + uv * uCrop.zw;
+  vec3 src = texture(uTex, suv).rgb;
+  vec3 c = src;
+  if (abs(uClar) > .001) {
+    float l = luma(c), d = l - luma(blurAt(suv, uBaseLod - 7.));
+    float w = mix(.35, 1., smoothstep(.04, .3, l) * (1. - smoothstep(.7, .98, l)));
+    c = clamp(c + d * uClar * 1.6 * w, 0., 1.);
+  }
+  vec3 lin = toLin(c);
+  if (uGlow > .001 || uGSoft > .001) {
+    vec3 g = toLin(blurAt(suv, uBaseLod - 5.6)) * .5 + toLin(blurAt(suv, uBaseLod - 4.4)) * .5;
+    float m = smoothstep(uGTh, uGTh + .3, pow(luma(g), 1. / 2.2));
+    lin += g * m * uGCol * uGlow;
+    lin = mix(lin, max(lin, g), uGSoft);
+  }
+  lin *= exp2(uEV);
+  vec3 wb = vec3(1. + uTemp * .6, 1. - uTint * .4, 1. - uTemp * .6);
+  lin *= wb / luma(wb);
+  c = toGam(lin);
+  if (uEV > .001 || uGlow > .001) c = vec3(shoulder(c.r), shoulder(c.g), shoulder(c.b));
+  c = vec3(sCurve(c.r, uCon), sCurve(c.g, uCon), sCurve(c.b, uCon));
+  c = uBlacks + c * (uWhites - uBlacks);
+  c = c * uGain + uLift * (1. - c);
+  c = pow(max(c, 0.), 1. / uGamma);
+  vec3 hsv = rgb2hsv(clamp(c, 0., 1.));
+  vec3 adj = band(hsv.x * 360.);
+  float sw = smoothstep(.03, .25, hsv.y);
+  hsv.x = fract(hsv.x + adj.x / 360. * sw + 1.);
+  hsv.y = clamp(hsv.y * (1. + adj.y * sw), 0., 1.);
+  hsv.z *= 1. + adj.z * sw;
+  c = hsv2rgb(hsv);
+  float l = luma(c);
+  float s = max(c.r, max(c.g, c.b)) - min(c.r, min(c.g, c.b));
+  c = mix(vec3(l), c, uSat * (1. + uVib * (1. - s)));
+  if (uMono > .001) c = mix(c, vec3(dot(c, uMix) / max(uMix.r + uMix.g + uMix.b, .001)), uMono);
+  l = luma(c);
+  c += (uSh.rgb - luma(uSh.rgb)) * uSh.a * (1. - smoothstep(0., .6, l));
+  c += (uHi.rgb - luma(uHi.rgb)) * uHi.a * smoothstep(.4, 1., l);
+  float r = length(vUv - .5) * 1.4142;
+  float v = smoothstep(.25, 1.1, r);
+  c *= 1. - uVig * v * v * 1.15;
+  if (uGrain > .001) {
+    vec2 gp = vec2(vUv.x * uOut.x / uOut.y, vUv.y) * (1300. / uGSize) + uSeed;
+    float n = vnoise(gp) * .65 + vnoise(gp * 2.3 + 19.7) * .35 - .5;
+    l = luma(clamp(c, 0., 1.));
+    c += n * uGrain * .22 * (.25 + 3. * l * (1. - l));
+  }
+  c = mix(src, clamp(c, 0., 1.), uAmt);
+  c += (hash(gl_FragCoord.xy + uSeed) - .5) / 255.;
+  o = vec4(clamp(c, 0., 1.), 1.);
+}`;
+
+class Renderer {
+  constructor(canvas, preserve){
+    this.canvas = canvas;
+    const gl = canvas.getContext('webgl2', {alpha:false, antialias:false, depth:false, stencil:false, premultipliedAlpha:false, preserveDrawingBuffer:!!preserve, powerPreference:'high-performance'});
+    if (!gl) throw new Error('webgl2');
+    this.gl = gl; this.p3 = false;
+    try {
+      if ('drawingBufferColorSpace' in gl) { gl.drawingBufferColorSpace = 'display-p3'; gl.unpackColorSpace = 'display-p3'; this.p3 = gl.drawingBufferColorSpace === 'display-p3'; }
+    } catch (e) {}
+    const sh = (type, src) => { const s = gl.createShader(type); gl.shaderSource(s, src); gl.compileShader(s); if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) throw new Error(gl.getShaderInfoLog(s)); return s; };
+    const p = gl.createProgram();
+    gl.attachShader(p, sh(gl.VERTEX_SHADER, VS)); gl.attachShader(p, sh(gl.FRAGMENT_SHADER, FS));
+    gl.bindAttribLocation(p, 0, 'aPos'); gl.linkProgram(p);
+    if (!gl.getProgramParameter(p, gl.LINK_STATUS)) throw new Error(gl.getProgramInfoLog(p));
+    this.prog = p; this.u = {};
+    const n = gl.getProgramParameter(p, gl.ACTIVE_UNIFORMS);
+    for (let i = 0; i < n; i++) { const info = gl.getActiveUniform(p, i); this.u[info.name.replace(/\[0\]$/, '')] = gl.getUniformLocation(p, info.name); }
+    this.vao = gl.createVertexArray(); gl.bindVertexArray(this.vao);
+    gl.bindBuffer(gl.ARRAY_BUFFER, gl.createBuffer());
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1,-1, 3,-1, -1,3]), gl.STATIC_DRAW);
+    gl.enableVertexAttribArray(0); gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 0, 0);
+    this.tex = gl.createTexture(); gl.bindTexture(gl.TEXTURE_2D, this.tex);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+    this.maxDim = Math.min(gl.getParameter(gl.MAX_TEXTURE_SIZE), gl.getParameter(gl.MAX_VIEWPORT_DIMS)[0]);
+    this.tw = 1; this.th = 1;
+  }
+  upload(src, w, h){
+    const gl = this.gl;
+    gl.bindTexture(gl.TEXTURE_2D, this.tex);
+    gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, src);
+    gl.generateMipmap(gl.TEXTURE_2D);
+    this.tw = w; this.th = h;
+  }
+  release(){
+    const gl = this.gl;
+    gl.bindTexture(gl.TEXTURE_2D, this.tex);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, new Uint8Array(4));
+  }
+  draw(P, o){
+    const gl = this.gl, u = this.u, c = o.crop;
+    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+    gl.viewport(0, 0, o.w, o.h);
+    gl.useProgram(this.prog); gl.bindVertexArray(this.vao);
+    gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, this.tex); gl.uniform1i(u.uTex, 0);
+    gl.uniform2f(u.uTexSize, this.tw, this.th);
+    gl.uniform4f(u.uCrop, c[0], c[1], c[2], c[3]);
+    gl.uniform1f(u.uFlip, o.flip ? 1 : 0);
+    gl.uniform2f(u.uOut, o.w, o.h);
+    gl.uniform1f(u.uBaseLod, Math.log2(Math.max(2, Math.min(c[2] * this.tw, c[3] * this.th))));
+    gl.uniform1f(u.uAmt, o.amt);
+    const f1 = (k, v) => gl.uniform1f(u[k], v), f3 = (k, v) => gl.uniform3f(u[k], v[0], v[1], v[2]), f4 = (k, v) => gl.uniform4f(u[k], v[0], v[1], v[2], v[3]);
+    f1('uEV', P.ev); f1('uTemp', P.temp); f1('uTint', P.tint); f1('uCon', P.con); f1('uBlacks', P.blacks); f1('uWhites', P.whites);
+    f1('uSat', P.sat); f1('uVib', P.vib); f1('uClar', P.clar); f1('uMono', P.mono);
+    f1('uGrain', P.grain * (o.grainMul ?? 1)); f1('uGSize', P.gsize); f1('uVig', P.vig * (o.vigMul ?? 1));
+    f1('uGlow', P.glow); f1('uGTh', P.gth); f1('uGSoft', P.gsoft); f1('uSeed', o.seed || 0);
+    f3('uLift', P.lift); f3('uGamma', P.gamma); f3('uGain', P.gain); f3('uMix', P.mix); f3('uGCol', P.gcol);
+    f4('uSh', P.sh); f4('uHi', P.hi);
+    gl.uniform3fv(u.uHsl, P.hslArr);
+    gl.drawArrays(gl.TRIANGLES, 0, 3);
+  }
+}
+
+/* ---------- state ---------- */
+const S = {look:'f-chrome', scene:'all', brand:'all', intensity:1, ratio:'4:3', grainMul:1, vigMul:1, stamp:false, frame:false, size:12,
+  mode:'sample', fromLive:false, srcW:0, srcH:0, compare:false, facing:'environment', zoom:1, lensKey:'wide', shotDate:new Date()};
+const PREF_KEY = 'agx-camera.v1';
+try { const saved = JSON.parse(localStorage.getItem(PREF_KEY) || 'null'); if (saved) for (const k of ['look','scene','brand','intensity','ratio','grainMul','vigMul','stamp','frame','size']) if (k in saved) S[k] = saved[k]; } catch (e) {}
+if (!LOOK[S.look]) S.look = 'f-chrome';
+if (!RATIOS[S.ratio]) S.ratio = '4:3';
+function savePrefs(){ try { localStorage.setItem(PREF_KEY, JSON.stringify({look:S.look, scene:S.scene, brand:S.brand, intensity:S.intensity, ratio:S.ratio, grainMul:S.grainMul, vigMul:S.vigMul, stamp:S.stamp, frame:S.frame, size:S.size})); } catch (e) {} }
+
+const vf = $('#vf'), shot = $('#shot'), imgBox = $('#imgBox'), view = $('#view'), video = $('#video');
+const srcCanvas = document.createElement('canvas');
+const ctxOpts = {colorSpace:'display-p3'};
+const srcCtx = srcCanvas.getContext('2d', ctxOpts) || srcCanvas.getContext('2d');
+const thumbSrc = document.createElement('canvas'); thumbSrc.width = 240; thumbSrc.height = 320;
+const thumbCtx = thumbSrc.getContext('2d', ctxOpts) || thumbSrc.getContext('2d');
+let main, thumbR, exportR = null;
+try {
+  main = new Renderer(view, false);
+  const tc = document.createElement('canvas'); tc.width = 120; tc.height = 160;
+  thumbR = new Renderer(tc, true);
+} catch (e) {
+  vf.innerHTML = '<p class="vf-msg">这个浏览器不支持 WebGL2，无法实时渲染滤镜。请把 iPhone 升级到 iOS 15 以上，并用 Safari 打开。</p>';
+  console.error(e);
+  return;
+}
+const inArtifact = !!(window.claude && window.claude.use);
+const capDownloads = inArtifact ? window.claude.use('downloads').catch(() => null) : Promise.resolve(null);
+
+/* ---------- helpers ---------- */
+let toastTimer, captionTimer;
+function toast(msg, ms = 3200){ const t = $('#toast'); t.textContent = msg; t.hidden = false; clearTimeout(toastTimer); toastTimer = setTimeout(() => t.hidden = true, ms); }
+function caption(html){ const c = $('#caption'); c.innerHTML = html; c.classList.add('show'); clearTimeout(captionTimer); captionTimer = setTimeout(() => c.classList.remove('show'), 3800); }
+const esc = s => String(s).replace(/[&<>"]/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[ch]));
+const pad = n => String(n).padStart(2, '0');
+const brandEn = L => L.be || (L.b ? BRAND[L.b].en : 'AgX 银盐');
+const curLook = () => LOOK[S.look];
+function cropRect(sw, sh, ratio, zoom){
+  const [a, b] = RATIOS[ratio];
+  let target = a / b; if (sh > sw) target = b / a;
+  const ar = sw / sh; let w = 1, h = 1;
+  if (ar > target) w = target / ar; else h = ar / target;
+  w /= zoom; h /= zoom;
+  return [(1 - w) / 2, (1 - h) / 2, w, h];
+}
+const curCrop = () => cropRect(S.srcW, S.srcH, S.ratio, S.mode === 'live' ? S.zoom : 1);
+const stampText = d => `'${String(d.getFullYear()).slice(2)}  ${pad(d.getMonth() + 1)}  ${pad(d.getDate())}`;
+const dateText = d => `${d.getFullYear()}.${pad(d.getMonth() + 1)}.${pad(d.getDate())}`;
+const setRangeFill = el => el.style.setProperty('--p', ((el.value - el.min) / (el.max - el.min) * 100) + '%');
+
+/* ---------- layout & render ---------- */
+function layout(){
+  if (!S.srcW) return;
+  const W = vf.clientWidth, H = vf.clientHeight;
+  if (W < 10 || H < 10) return;
+  const cr = curCrop(), A = (cr[2] * S.srcW) / (cr[3] * S.srcH);
+  let iw, ih, p = 0, bb = 0;
+  if (S.frame) {
+    const m = Math.min(1, 1 / A), TW = 1 + 2 * FR.side * m, TH = 1 / A + (FR.side + FR.bottom) * m, s = Math.min(W / TW, H / TH) * .98;
+    iw = s; ih = s / A; p = FR.side * m * s; bb = FR.bottom * m * s;
+  } else {
+    iw = Math.min(W, H * A); ih = iw / A;
+  }
+  shot.classList.toggle('framed', S.frame);
+  shot.style.width = (iw + 2 * p) + 'px'; shot.style.height = (ih + p + bb) + 'px';
+  shot.style.padding = `${p}px ${p}px ${bb}px ${p}px`;
+  imgBox.style.width = iw + 'px'; imgBox.style.height = ih + 'px';
+  const fb = $('#framebar'); fb.hidden = !S.frame;
+  if (S.frame) {
+    fb.style.height = bb + 'px'; fb.style.left = p + 'px'; fb.style.right = p + 'px';
+    fb.querySelectorAll('b')[0].style.fontSize = (bb * .26) + 'px';
+    fb.querySelectorAll('b')[1].style.fontSize = (bb * .17) + 'px';
+    fb.querySelectorAll('span').forEach(s => s.style.fontSize = (bb * .15) + 'px');
+  }
+  const st = $('#stamp');
+  st.style.fontSize = (ih * .042) + 'px'; st.style.right = (iw * .05) + 'px'; st.style.bottom = (ih * .045) + 'px';
+  const dpr = Math.min(window.devicePixelRatio || 1, 3);
+  let cw = Math.round(iw * dpr), ch = Math.round(ih * dpr);
+  const maxPx = 4.2e6; if (cw * ch > maxPx) { const k = Math.sqrt(maxPx / (cw * ch)); cw = Math.round(cw * k); ch = Math.round(ch * k); }
+  if (view.width !== cw || view.height !== ch) { view.width = cw; view.height = ch; }
+  $('#roRatio').textContent = S.ratio + (S.mode === 'live' && S.zoom > 1 ? '' : '');
+  renderMain();
+}
+let rafPending = false;
+function requestRender(){ if (S.mode === 'live' || rafPending) return; rafPending = true; requestAnimationFrame(() => { rafPending = false; renderMain(); }); }
+function renderMain(){
+  if (!S.srcW) return;
+  const L = curLook();
+  main.draw(resolved(L), {crop:curCrop(), flip:S.mode === 'live' && S.facing === 'user', amt:(S.compare || L.id === 'none') ? 0 : S.intensity, w:view.width, h:view.height, grainMul:S.grainMul, vigMul:S.vigMul});
+}
+new ResizeObserver(() => layout()).observe(vf);
+
+function updateReadout(){
+  const L = curLook();
+  $('#roBrand').textContent = L.b ? brandEn(L) : 'iPHONE';
+  $('#roName').textContent = L.en;
+  $('#fbBrand').textContent = L.b ? brandEn(L) : 'AgX 银盐';
+  $('#fbLook').textContent = L.id === 'none' ? '原图' : `${L.en}${L.n !== L.en ? ' · ' + L.n : ''}`;
+  $('#fbDate').textContent = dateText(S.shotDate);
+  const st = $('#stamp'); st.hidden = !S.stamp; st.textContent = stampText(S.shotDate);
+}
+
+/* ---------- source handling ---------- */
+function setSourceFromCanvas(){
+  S.srcW = srcCanvas.width; S.srcH = srcCanvas.height;
+  main.upload(srcCanvas, S.srcW, S.srcH);
+  snapshotThumbs(srcCanvas, S.srcW, S.srcH, false);
+  layout(); updateControls();
+}
+function snapshotThumbs(el, w, h, mirror){
+  const ta = 3 / 4; let sw = w, sh = h;
+  if (w / h > ta) sw = h * ta; else sh = w / ta;
+  thumbCtx.save();
+  if (mirror) { thumbCtx.translate(240, 0); thumbCtx.scale(-1, 1); }
+  thumbCtx.drawImage(el, (w - sw) / 2, (h - sh) / 2, sw, sh, 0, 0, 240, 320);
+  thumbCtx.restore();
+  thumbR.upload(thumbSrc, 240, 320);
+  thumbGen++; scheduleThumbs();
+}
+const SRC_CAP = 16e6;
+async function loadFile(file){
+  if (!file) return;
+  stopLive(); S.fromLive = false;
+  busy(true, '读取照片…');
+  const url = URL.createObjectURL(file);
+  try {
+    const img = new Image(); img.src = url; await img.decode();
+    const w0 = img.naturalWidth, h0 = img.naturalHeight;
+    const k = Math.min(1, Math.sqrt(SRC_CAP / (w0 * h0)));
+    srcCanvas.width = Math.round(w0 * k); srcCanvas.height = Math.round(h0 * k);
+    srcCtx.drawImage(img, 0, 0, srcCanvas.width, srcCanvas.height);
+    S.mode = 'photo'; S.shotDate = file.lastModified ? new Date(file.lastModified) : new Date();
+    setSourceFromCanvas(); updateReadout();
+    if (k < 1) toast(`原图 ${Math.round(w0 * h0 / 1e6)}MP，已按 Safari 画布上限缩放到 ${srcCanvas.width}×${srcCanvas.height}`);
+  } catch (e) {
+    toast('无法读取这张照片，请换一张 JPG / HEIC 再试');
+  } finally { URL.revokeObjectURL(url); busy(false); }
+}
+function busy(on, text){ const b = $('#busy'); b.hidden = !on; if (text) b.textContent = text; }
+
+/* sample scene: painted landscape so every look has something to show before the first photo */
+function paintSample(){
+  const W = 1200, H = 1600; srcCanvas.width = W; srcCanvas.height = H;
+  const g = srcCtx; let seed = 11;
+  const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+  let gr = g.createLinearGradient(0, 0, 0, H * .52);
+  gr.addColorStop(0, '#2b5c9f'); gr.addColorStop(.5, '#6c9ed6'); gr.addColorStop(.82, '#cfc0b6'); gr.addColorStop(1, '#f2c08e');
+  g.fillStyle = gr; g.fillRect(0, 0, W, H * .56);
+  gr = g.createRadialGradient(W * .7, H * .44, 0, W * .7, H * .44, H * .34);
+  gr.addColorStop(0, 'rgba(255,248,226,1)'); gr.addColorStop(.06, 'rgba(255,232,186,.95)'); gr.addColorStop(.3, 'rgba(255,196,140,.3)'); gr.addColorStop(1, 'rgba(255,196,140,0)');
+  g.fillStyle = gr; g.fillRect(0, 0, W, H * .6);
+  for (let k = 0; k < 6; k++) {
+    const cx = rnd() * W, cy = H * (.06 + rnd() * .26), sc = .6 + rnd() * .8;
+    for (let i = 0; i < 16; i++) {
+      const x = cx + (rnd() - .5) * 340 * sc, y = cy + (rnd() - .5) * 46 * sc, r = (36 + rnd() * 70) * sc;
+      const cg = g.createRadialGradient(x, y, 0, x, y, r), a = .28 + rnd() * .25;
+      cg.addColorStop(0, `rgba(255,251,246,${a})`); cg.addColorStop(1, 'rgba(255,251,246,0)');
+      g.fillStyle = cg; g.beginPath(); g.arc(x, y, r, 0, 7); g.fill();
+    }
+  }
+  const ridge = (base, jit, waves, c1, c2) => {
+    g.beginPath(); g.moveTo(0, H);
+    for (let x = 0; x <= W; x += 5) { let y = base; for (const [f, a, ph] of waves) y -= Math.sin(x * f + ph) * a; g.lineTo(x, y - rnd() * jit); }
+    g.lineTo(W, H); g.closePath();
+    const lg = g.createLinearGradient(0, base - 160, 0, base + 60); lg.addColorStop(0, c1); lg.addColorStop(1, c2);
+    g.fillStyle = lg; g.fill();
+  };
+  ridge(H * .47, 5, [[.004, 70, 1], [.011, 26, 2], [.033, 8, 0]], '#7c85b5', '#a9adc9');
+  ridge(H * .525, 4, [[.006, 46, 3], [.017, 18, 1], [.05, 5, 2]], '#3c6676', '#5e8890');
+  for (let x = 0; x < W; x += 7) { const h = 14 + rnd() * 26, y = H * .566; g.fillStyle = rnd() > .5 ? '#2c5a2e' : '#36693a'; g.beginPath(); g.moveTo(x - 6, y); g.lineTo(x, y - h); g.lineTo(x + 6, y); g.fill(); }
+  const lt = H * .564, lb = H * .655;
+  gr = g.createLinearGradient(0, lt, 0, lb); gr.addColorStop(0, '#e6bb93'); gr.addColorStop(.35, '#98b0cf'); gr.addColorStop(1, '#41699a');
+  g.fillStyle = gr; g.fillRect(0, lt, W, lb - lt);
+  for (let i = 0; i < 70; i++) { const y = lt + rnd() * (lb - lt), f = 1 - (y - lt) / (lb - lt), w = 16 + rnd() * 170 * f; g.fillStyle = `rgba(255,238,204,${.12 + rnd() * .35})`; g.fillRect(W * .7 - w / 2 + (rnd() - .5) * 70, y, w, 2 + rnd() * 2); }
+  gr = g.createLinearGradient(0, lb, 0, H); gr.addColorStop(0, '#9fb94d'); gr.addColorStop(.35, '#6f9c35'); gr.addColorStop(1, '#355f22');
+  g.fillStyle = gr; g.fillRect(0, lb - 2, W, H - lb + 2);
+  for (let i = 0; i < 5200; i++) {
+    const y = lb + Math.pow(rnd(), .8) * (H - lb), x = rnd() * W, t = (y - lb) / (H - lb), len = 6 + t * 34;
+    g.strokeStyle = ['#4f7f28', '#87a83d', '#3d6a22', '#b3c25a', '#2e5419'][(rnd() * 5) | 0];
+    g.lineWidth = 1 + t * 2; g.beginPath(); g.moveTo(x, y); g.lineTo(x + (rnd() - .5) * len * .5, y - len); g.stroke();
+  }
+  const hx = W * .6, hy = H * .642, hw = 170, hh = 92;
+  g.fillStyle = '#e9dfca'; g.fillRect(hx, hy - hh, hw, hh);
+  g.fillStyle = '#b5342a'; g.beginPath(); g.moveTo(hx - 18, hy - hh + 4); g.lineTo(hx + hw / 2, hy - hh - 70); g.lineTo(hx + hw + 18, hy - hh + 4); g.fill();
+  g.fillStyle = '#5a3a26'; g.fillRect(hx + 22, hy - 58, 30, 58);
+  g.fillStyle = '#2b3238'; g.fillRect(hx + 84, hy - 66, 50, 34);
+  g.fillStyle = '#f3e6c6'; g.fillRect(hx + 107, hy - 66, 3, 34); g.fillRect(hx + 84, hy - 50, 50, 3);
+  const tree = (x, base, h, w) => { for (let i = 0; i < 6; i++) { const y = base - i * h / 7, ww = w * (1 - i / 7); g.fillStyle = i % 2 ? '#1f4a22' : '#275a2a'; g.beginPath(); g.moveTo(x - ww, y); g.lineTo(x, y - h / 3.2); g.lineTo(x + ww, y); g.fill(); } g.fillStyle = '#4a3322'; g.fillRect(x - 6, base, 12, 30); };
+  tree(W * .12, H * .78, 420, 120); tree(W * .27, H * .74, 300, 84);
+  const cols = ['#d8302a', '#f08722', '#f4cf38', '#8a5cc0', '#f6f2ea', '#e24f86'];
+  for (let i = 0; i < 900; i++) {
+    const t = Math.pow(rnd(), .6), y = H * .7 + t * H * .3, x = rnd() * W, r = 2 + t * 9;
+    g.fillStyle = cols[(rnd() * cols.length) | 0]; g.beginPath(); g.arc(x, y, r, 0, 7); g.fill();
+  }
+  const id = g.getImageData(0, 0, W, H), d = id.data;
+  for (let i = 0; i < d.length; i += 4) { const n = (rnd() - .5) * 10; d[i] += n; d[i + 1] += n; d[i + 2] += n; }
+  g.putImageData(id, 0, 0);
+  S.mode = 'sample'; S.shotDate = new Date();
+  setSourceFromCanvas();
+}
+
+/* ---------- chips & strip ---------- */
+function visibleLooks(){
+  let list = LOOKS.filter(L => L.id === 'none' || ((S.brand === 'all' || L.b === S.brand) && (S.scene === 'all' || L.sc.includes(S.scene))));
+  if (S.scene !== 'all') list = list.slice().sort((a, b) => (a.id === 'none' ? -1 : b.id === 'none' ? 1 : a.sc.indexOf(S.scene) - b.sc.indexOf(S.scene)));
+  return list;
+}
+function renderScenes(){
+  $('#scenes').innerHTML = SCENES.map(s => `<button data-scene="${s.id}" aria-pressed="${s.id === S.scene}">${s.n}</button>`).join('');
+}
+function renderBrands(){
+  $('#brands').innerHTML = BRANDS.map(b => {
+    const cnt = b.id === 'all' ? LOOKS.length - 1 : LOOKS.filter(L => L.b === b.id && (S.scene === 'all' || L.sc.includes(S.scene))).length;
+    const total = b.id === 'all' ? cnt : LOOKS.filter(L => L.b === b.id).length;
+    const shown = b.id === 'all' ? (S.scene === 'all' ? cnt : LOOKS.filter(L => L.b && L.sc.includes(S.scene)).length) : cnt;
+    return `<button data-brand="${b.id}" aria-pressed="${b.id === S.brand}" class="${shown === 0 ? 'dim' : ''}">${b.n}<small>${S.scene === 'all' ? total : shown}</small></button>`;
+  }).join('');
+}
+const lookEls = {};
+for (const L of LOOKS) {
+  const btn = document.createElement('button');
+  btn.className = 'look'; btn.dataset.look = L.id; btn.setAttribute('aria-label', `${L.b ? BRAND[L.b].n + ' ' : ''}${L.n}`);
+  const cv = document.createElement('canvas'); cv.width = 120; cv.height = 160; cv.dataset.gen = '-1';
+  btn.append(cv);
+  btn.insertAdjacentHTML('beforeend', `<span class="lb">${esc(L.b ? brandEn(L) : 'iPHONE')}</span><span class="ln">${esc(L.n)}</span>`);
+  lookEls[L.id] = btn;
+}
+function renderStrip(){
+  const strip = $('#strip'), list = visibleLooks();
+  strip.replaceChildren(...list.map(L => lookEls[L.id]));
+  if (list.length <= 1) strip.insertAdjacentHTML('beforeend', `<p class="empty">这个品牌暂时没有适合「${SCENES.find(s => s.id === S.scene).n}」的滤镜，换个场景看看</p>`);
+  markSelected(); scheduleThumbs();
+}
+function markSelected(){ for (const id in lookEls) lookEls[id].setAttribute('aria-pressed', id === S.look); }
+let thumbGen = 0, thumbJob = 0;
+function scheduleThumbs(){
+  if (thumbJob) return;
+  thumbJob = requestAnimationFrame(function step(){
+    thumbJob = 0;
+    let done = 0;
+    for (const btn of $('#strip').children) {
+      const cv = btn.querySelector && btn.querySelector('canvas');
+      if (!cv || +cv.dataset.gen === thumbGen) continue;
+      const L = LOOK[btn.dataset.look];
+      thumbR.draw(resolved(L), {crop:[0, 0, 1, 1], amt:L.id === 'none' ? 0 : 1, w:120, h:160});
+      cv.getContext('2d').drawImage(thumbR.canvas, 0, 0);
+      cv.dataset.gen = thumbGen;
+      if (++done >= 10) { thumbJob = requestAnimationFrame(step); return; }
+    }
+  });
+}
+
+function selectLook(id, opts = {}){
+  const L = LOOK[id]; if (!L) return;
+  S.look = id; markSelected(); updateReadout();
+  if (L.ratio && S.ratio !== L.ratio && !opts.keepRatio) { S.ratio = L.ratio; syncRatio(); toast(`已切换到 ${L.ratio} 宽幅画幅，可在右上角改回`); layout(); }
+  requestRender();
+  if (!opts.quiet) caption(`<b>${esc(L.b ? BRAND[L.b].n + ' · ' + L.n : L.n)}</b>${esc(L.d)}`);
+  if (opts.scroll) lookEls[id].scrollIntoView({block:'nearest', inline:'center', behavior:'smooth'});
+  savePrefs();
+}
+function stepLook(dir){
+  const list = visibleLooks(); let i = list.findIndex(L => L.id === S.look);
+  i = (i + dir + list.length) % list.length;
+  selectLook(list[i].id, {scroll:true});
+}
+$('#scenes').addEventListener('click', e => {
+  const b = e.target.closest('[data-scene]'); if (!b) return;
+  S.scene = b.dataset.scene; renderScenes(); renderBrands(); renderStrip();
+  const sc = SCENES.find(s => s.id === S.scene);
+  if (sc.tip) caption(`<b>${sc.n}</b>${esc(sc.tip)}`);
+  const list = visibleLooks(); if (S.scene !== 'all' && !list.some(L => L.id === S.look) && list.length > 1) selectLook(list[1].id, {quiet:true});
+  savePrefs();
+});
+$('#brands').addEventListener('click', e => {
+  const b = e.target.closest('[data-brand]'); if (!b) return;
+  S.brand = b.dataset.brand; renderBrands(); renderStrip();
+  $('#strip').scrollTo({left:0});
+  const list = visibleLooks(); if (!list.some(L => L.id === S.look) && list.length > 1) selectLook(list[1].id);
+  savePrefs();
+});
+$('#strip').addEventListener('click', e => { const b = e.target.closest('[data-look]'); if (b) selectLook(b.dataset.look); });
+
+/* ---------- gestures on the viewfinder ---------- */
+let gest = null;
+function setCompare(on){ S.compare = on; $('#badgeCompare').hidden = !on; requestRender(); }
+imgBox.addEventListener('pointerdown', e => {
+  if (e.target.closest('button')) return;
+  gest = {x:e.clientX, y:e.clientY, moved:false, cmp:false};
+  gest.t = setTimeout(() => { if (gest && !gest.moved) { gest.cmp = true; setCompare(true); } }, 160);
+  try { imgBox.setPointerCapture(e.pointerId); } catch (err) {}
+});
+imgBox.addEventListener('pointermove', e => {
+  if (!gest || gest.cmp) return;
+  if (Math.abs(e.clientX - gest.x) > 12 || Math.abs(e.clientY - gest.y) > 12) { gest.moved = true; clearTimeout(gest.t); }
+});
+const endGesture = e => {
+  if (!gest) return; clearTimeout(gest.t);
+  const dx = e.clientX - gest.x;
+  if (gest.cmp) setCompare(false);
+  else if (gest.moved && Math.abs(dx) > 40 && Math.abs(dx) > Math.abs(e.clientY - gest.y)) stepLook(dx < 0 ? 1 : -1);
+  gest = null;
+};
+imgBox.addEventListener('pointerup', endGesture);
+imgBox.addEventListener('pointercancel', endGesture);
+imgBox.addEventListener('contextmenu', e => e.preventDefault());
+document.addEventListener('keydown', e => {
+  if (e.target.closest('input') || !$('#scrim').hidden) return;
+  if (e.key === 'ArrowRight') stepLook(1); else if (e.key === 'ArrowLeft') stepLook(-1);
+});
+
+/* ---------- intensity, ratio, settings ---------- */
+const inten = $('#intensity');
+inten.value = Math.round(S.intensity * 100); $('#intensityOut').textContent = inten.value; setRangeFill(inten);
+inten.addEventListener('input', () => { S.intensity = inten.value / 100; $('#intensityOut').textContent = inten.value; setRangeFill(inten); requestRender(); });
+inten.addEventListener('change', savePrefs);
+$('#segRatio').innerHTML = RATIO_KEYS.map(k => `<button class="mono" data-v="${k}">${k}${k === '65:24' ? ' XPan' : ''}</button>`).join('');
+function syncRatio(){
+  $('#btnRatio').textContent = S.ratio;
+  $('#segRatio').querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', b.dataset.v === S.ratio));
+}
+function setRatio(r){ S.ratio = r; syncRatio(); layout(); savePrefs(); }
+$('#btnRatio').addEventListener('click', () => setRatio(RATIO_KEYS[(RATIO_KEYS.indexOf(S.ratio) + 1) % RATIO_KEYS.length]));
+$('#segRatio').addEventListener('click', e => { const b = e.target.closest('button'); if (b) setRatio(b.dataset.v); });
+function bindMul(id, outId, key){
+  const el = $(id); el.value = Math.round(S[key] * 100); $(outId).textContent = el.value + '%'; setRangeFill(el);
+  el.addEventListener('input', () => { S[key] = el.value / 100; $(outId).textContent = el.value + '%'; setRangeFill(el); requestRender(); });
+  el.addEventListener('change', savePrefs);
+}
+bindMul('#grainMul', '#grainOut', 'grainMul'); bindMul('#vigMul', '#vigOut', 'vigMul');
+$('#optStamp').checked = S.stamp; $('#optFrame').checked = S.frame;
+$('#optStamp').addEventListener('change', e => { S.stamp = e.target.checked; updateReadout(); savePrefs(); });
+$('#optFrame').addEventListener('change', e => { S.frame = e.target.checked; layout(); savePrefs(); });
+function syncSize(){ $('#segSize').querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', +b.dataset.v === S.size)); }
+$('#segSize').addEventListener('click', e => { const b = e.target.closest('button'); if (b) { S.size = +b.dataset.v; syncSize(); savePrefs(); } });
+$('#noteDevice').textContent = `为 iPhone 17 系列调校：0.5× / 1× / 2×，17 Pro 另有 4× / 8×。48MP 照片会按 Safari 画布上限缩放到 1600 万像素以内${main.p3 ? '，并保留 Display P3 广色域' : ''}。`;
+
+let openSheetEl = null;
+function openSheet(el){ openSheetEl = el; $('#scrim').hidden = false; el.hidden = false; }
+function closeSheet(){
+  if (!openSheetEl) return;
+  openSheetEl.hidden = true; $('#scrim').hidden = true;
+  if (openSheetEl.id === 'sheetSave') { const img = $('#saveImg'); if (img.src.startsWith('blob:')) URL.revokeObjectURL(img.src); img.removeAttribute('src'); lastExport = null; }
+  openSheetEl = null;
+}
+$('#btnSettings').addEventListener('click', () => openSheet($('#sheetSettings')));
+$('#scrim').addEventListener('click', closeSheet);
+document.querySelectorAll('[data-close]').forEach(b => b.addEventListener('click', closeSheet));
+
+/* ---------- live viewfinder (works where the page may use the camera: Safari / home-screen app over HTTPS) ---------- */
+let stream = null, lensDevs = {}, curDeviceId = null, thumbTimer = 0, liveBlocked = false;
+const LENSES = [
+  {k:'ultra', label:'.5', dev:'ultra', zoom:1}, {k:'wide', label:'1×', dev:'wide', zoom:1}, {k:'wide2', label:'2', dev:'wide', zoom:2},
+  {k:'tele', label:'4', dev:'tele', zoom:1}, {k:'tele2', label:'8', dev:'tele', zoom:2}
+];
+if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) $('#btnLive').hidden = false;
+function stopLive(){
+  if (stream) { stream.getTracks().forEach(t => t.stop()); stream = null; }
+  clearInterval(thumbTimer); thumbTimer = 0;
+  if (S.mode === 'live') S.mode = 'photo';
+  $('#lenses').hidden = true;
+}
+async function startLive(deviceId, zoom = 1){
+  if (liveBlocked) return;
+  busy(true, '正在打开相机…');
+  try {
+    if (stream) { stream.getTracks().forEach(t => t.stop()); stream = null; }
+    const size = {width:{ideal:4032}, height:{ideal:3024}};
+    const video_c = deviceId ? Object.assign({deviceId:{exact:deviceId}}, size) : Object.assign({facingMode:{ideal:S.facing}}, size);
+    stream = await navigator.mediaDevices.getUserMedia({audio:false, video:video_c});
+    video.srcObject = stream;
+    await video.play().catch(() => {});
+    const st = stream.getVideoTracks()[0].getSettings();
+    curDeviceId = st.deviceId || deviceId || null;
+    if (st.facingMode) S.facing = st.facingMode === 'user' ? 'user' : 'environment';
+    S.mode = 'live'; S.fromLive = true; S.zoom = zoom; S.shotDate = new Date();
+    await detectLenses();
+    clearInterval(thumbTimer);
+    thumbTimer = setInterval(() => { if (S.mode === 'live' && video.videoWidth) snapshotThumbs(video, video.videoWidth, video.videoHeight, S.facing === 'user'); }, 2500);
+    liveLoop();
+    updateControls(); updateReadout();
+    setTimeout(() => { if (S.mode === 'live' && video.videoWidth) snapshotThumbs(video, video.videoWidth, video.videoHeight, S.facing === 'user'); }, 400);
+  } catch (e) {
+    console.warn(e);
+    if (e && (e.name === 'NotAllowedError' || e.name === 'SecurityError')) {
+      liveBlocked = !!inArtifact;
+      toast(inArtifact
+        ? '在 claude.ai 里打开时网页不能直接调用摄像头。点快门会打开 iPhone 系统相机拍照；添加到主屏幕的离线版可以实时取景。'
+        : '没有拿到相机权限。请到 设置 › Safari › 相机 允许访问，或点快门用系统相机拍照。', 6000);
+      if (liveBlocked) $('#btnLive').hidden = true;
+    } else {
+      toast('相机打开失败：' + (e && e.message ? e.message : '未知错误') + '。可以先点快门用系统相机拍照。', 5000);
+    }
+    stopLive(); updateControls();
+  } finally { busy(false); }
+}
+async function detectLenses(){
+  lensDevs = {};
+  try {
+    const ds = (await navigator.mediaDevices.enumerateDevices()).filter(d => d.kind === 'videoinput');
+    for (const d of ds) {
+      const l = (d.label || '').toLowerCase();
+      if (/front|前置|facetime|user/.test(l)) lensDevs.front = lensDevs.front || d.deviceId;
+      else if (/ultra|超广角/.test(l)) lensDevs.ultra = lensDevs.ultra || d.deviceId;
+      else if (/tele|长焦/.test(l)) lensDevs.tele = lensDevs.tele || d.deviceId;
+      else if (/dual|triple|双|三/.test(l)) continue;
+      else if (/back|rear|后置|后|camera|相机/.test(l)) lensDevs.wide = lensDevs.wide || d.deviceId;
+    }
+  } catch (e) {}
+  if (S.facing === 'environment' && curDeviceId) {
+    const k = Object.keys(lensDevs).find(k => lensDevs[k] === curDeviceId);
+    if (!k) lensDevs.wide = lensDevs.wide || curDeviceId;
+    const devKey = k || 'wide';
+    S.lensKey = LENSES.find(o => o.dev === devKey && o.zoom === S.zoom)?.k || devKey;
+  }
+  renderLenses();
+}
+function renderLenses(){
+  const box = $('#lenses');
+  if (S.mode !== 'live' || S.facing === 'user') { box.hidden = true; return; }
+  const opts = LENSES.filter(o => lensDevs[o.dev]);
+  box.innerHTML = opts.map(o => `<button data-lens="${o.k}" aria-pressed="${o.k === S.lensKey}" aria-label="${o.label.replace('.5', '0.5')}× 镜头">${o.k === S.lensKey ? (o.label.endsWith('×') ? o.label : o.label + '×') : o.label}</button>`).join('');
+  box.hidden = opts.length < 2;
+}
+$('#lenses').addEventListener('click', async e => {
+  const b = e.target.closest('[data-lens]'); if (!b) return;
+  const o = LENSES.find(x => x.k === b.dataset.lens), id = lensDevs[o.dev];
+  S.lensKey = o.k;
+  if (id && id !== curDeviceId) await startLive(id, o.zoom);
+  else { S.zoom = o.zoom; renderLenses(); layout(); }
+});
+function liveLoop(){
+  if (S.mode !== 'live') return;
+  if (video.readyState >= 2 && video.videoWidth) {
+    if (video.videoWidth !== S.srcW || video.videoHeight !== S.srcH) { S.srcW = video.videoWidth; S.srcH = video.videoHeight; main.upload(video, S.srcW, S.srcH); layout(); }
+    else main.upload(video, S.srcW, S.srcH);
+    renderMain();
+  }
+  if (video.requestVideoFrameCallback) video.requestVideoFrameCallback(liveLoop); else requestAnimationFrame(liveLoop);
+}
+function capture(){
+  const vw = video.videoWidth, vh = video.videoHeight; if (!vw) return;
+  const zw = vw / S.zoom, zh = vh / S.zoom;
+  srcCanvas.width = Math.round(zw); srcCanvas.height = Math.round(zh);
+  srcCtx.save();
+  if (S.facing === 'user') { srcCtx.translate(srcCanvas.width, 0); srcCtx.scale(-1, 1); }
+  srcCtx.drawImage(video, (vw - zw) / 2, (vh - zh) / 2, zw, zh, 0, 0, srcCanvas.width, srcCanvas.height);
+  srcCtx.restore();
+  const f = $('#flash'); f.classList.remove('go'); void f.offsetWidth; f.classList.add('go');
+  stopLive(); S.mode = 'photo'; S.zoom = 1; S.shotDate = new Date();
+  setSourceFromCanvas(); updateReadout();
+}
+$('#btnLive').addEventListener('click', () => { if (S.mode === 'live') { stopLive(); S.fromLive = false; paintOrKeep(); } else startLive(); });
+$('#btnBackLive').addEventListener('click', () => startLive(curDeviceId, S.lensKey.endsWith('2') ? 2 : 1));
+function paintOrKeep(){ if (S.mode !== 'photo') paintSample(); else { main.upload(srcCanvas, S.srcW = srcCanvas.width, S.srcH = srcCanvas.height); layout(); } updateControls(); }
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible' && S.mode === 'live' && (!stream || stream.getVideoTracks()[0].readyState === 'ended')) startLive(curDeviceId, S.zoom);
+});
+
+/* ---------- controls ---------- */
+const ICON_SAVE = '<path d="M12 4v11M7.5 10.5 12 15l4.5-4.5"/><path d="M5 15v3.5A1.5 1.5 0 0 0 6.5 20h11a1.5 1.5 0 0 0 1.5-1.5V15"/>';
+const ICON_FLIP = '<path d="M4 9a8 8 0 0 1 14.5-3.5L20 7"/><path d="M20 3v4h-4"/><path d="M20 15a8 8 0 0 1-14.5 3.5L4 17"/><path d="M4 21v-4h4"/>';
+function updateControls(){
+  const live = S.mode === 'live';
+  $('#btnLive').setAttribute('aria-pressed', live);
+  $('#btnShutter').classList.toggle('live', live);
+  $('#btnShutter').setAttribute('aria-label', live ? '拍照' : (S.fromLive ? '返回取景' : '打开系统相机拍照'));
+  $('#icoRight').innerHTML = live ? ICON_FLIP : ICON_SAVE;
+  $('#lblRight').textContent = live ? '翻转' : '保存';
+  $('#btnBackLive').hidden = !(S.mode === 'photo' && S.fromLive && !liveBlocked);
+  renderLenses();
+}
+$('#btnShutter').addEventListener('click', () => {
+  if (S.mode === 'live') return capture();
+  if (S.fromLive && !liveBlocked) return startLive(curDeviceId, S.lensKey.endsWith('2') ? 2 : 1);
+  $('#fileCamera').click();
+});
+$('#btnAlbum').addEventListener('click', () => $('#fileAlbum').click());
+$('#fileCamera').addEventListener('change', e => { loadFile(e.target.files[0]); e.target.value = ''; });
+$('#fileAlbum').addEventListener('change', e => { loadFile(e.target.files[0]); e.target.value = ''; });
+$('#btnRight').addEventListener('click', () => {
+  if (S.mode === 'live') { S.facing = S.facing === 'user' ? 'environment' : 'user'; S.zoom = 1; S.lensKey = 'wide'; startLive(S.facing === 'user' ? lensDevs.front : lensDevs.wide, 1); }
+  else save();
+});
+
+/* ---------- export ---------- */
+let lastExport = null;
+function drawStamp(ctx, x, y, w, h){
+  const fs = Math.round(h * .042);
+  ctx.save();
+  ctx.font = `700 ${fs}px ${DIAL}`; ctx.textAlign = 'right'; ctx.textBaseline = 'alphabetic';
+  ctx.fillStyle = '#ff7d1f'; ctx.shadowColor = 'rgba(255,110,20,.9)'; ctx.shadowBlur = fs * .35;
+  ctx.fillText(stampText(S.shotDate).replace(/ /g, ' '), x + w - w * .05, y + h - h * .045);
+  ctx.restore();
+}
+function drawFrameText(ctx, x, y, w, bb){
+  const L = curLook(), cy = y + bb / 2;
+  ctx.save(); ctx.textBaseline = 'middle';
+  ctx.fillStyle = '#1d1d1b'; ctx.font = `700 ${bb * .26}px ${DIAL}`; ctx.textAlign = 'left';
+  ctx.fillText(L.b ? brandEn(L) : 'AgX 银盐', x, cy - bb * .12);
+  ctx.fillStyle = '#7b7a74'; ctx.font = `500 ${bb * .15}px ${UI}`;
+  ctx.fillText(L.id === 'none' ? '原图' : `${L.en}${L.n !== L.en ? ' · ' + L.n : ''}`, x, cy + bb * .2);
+  ctx.textAlign = 'right'; ctx.fillStyle = '#1d1d1b'; ctx.font = `700 ${bb * .17}px ${DIAL}`;
+  ctx.fillText('SHOT ON iPHONE', x + w, cy - bb * .12);
+  ctx.fillStyle = '#7b7a74'; ctx.font = `500 ${bb * .15}px ${MONO}`;
+  ctx.fillText(dateText(S.shotDate), x + w, cy + bb * .2);
+  ctx.restore();
+}
+async function exportImage(){
+  const L = curLook(), cr = cropRect(S.srcW, S.srcH, S.ratio, 1);
+  const cw = cr[2] * S.srcW, ch = cr[3] * S.srcH, cap = S.size === 16 ? 16e6 : 12.2e6;
+  if (!exportR) exportR = new Renderer(document.createElement('canvas'), true);
+  const k = Math.min(1, Math.sqrt(cap / (cw * ch)), exportR.maxDim / Math.max(cw, ch));
+  const w = Math.round(cw * k), h = Math.round(ch * k);
+  exportR.canvas.width = w; exportR.canvas.height = h;
+  exportR.upload(srcCanvas, S.srcW, S.srcH);
+  exportR.draw(resolved(L), {crop:cr, flip:false, amt:L.id === 'none' ? 0 : S.intensity, w, h, grainMul:S.grainMul, vigMul:S.vigMul});
+  let out = exportR.canvas;
+  if (S.stamp || S.frame) {
+    const m = Math.min(w, h), p = S.frame ? Math.round(FR.side * m) : 0, bb = S.frame ? Math.round(FR.bottom * m) : 0;
+    const comp = document.createElement('canvas'); comp.width = w + 2 * p; comp.height = h + p + bb;
+    const ctx = comp.getContext('2d', ctxOpts) || comp.getContext('2d');
+    if (S.frame) { ctx.fillStyle = '#f6f4ee'; ctx.fillRect(0, 0, comp.width, comp.height); }
+    ctx.drawImage(exportR.canvas, p, p);
+    if (S.stamp) drawStamp(ctx, p, p, w, h);
+    if (S.frame) drawFrameText(ctx, p, p + h, w, bb);
+    out = comp;
+  }
+  const blob = await new Promise((res, rej) => out.toBlob(b => b ? res(b) : rej(new Error('toBlob')), 'image/jpeg', .95));
+  const dims = [out.width, out.height];
+  exportR.release(); exportR.canvas.width = 1; exportR.canvas.height = 1;
+  if (out !== exportR.canvas) { out.width = 1; out.height = 1; }
+  return {blob, w:dims[0], h:dims[1]};
+}
+async function save(){
+  if (!$('#busy').hidden) return;
+  busy(true, '正在输出照片…');
+  await new Promise(r => setTimeout(r, 40));
+  try {
+    const r = await exportImage(), L = curLook(), d = S.shotDate;
+    const name = `agx_${L.id}_${d.getFullYear()}${pad(d.getMonth() + 1)}${pad(d.getDate())}-${pad(d.getHours())}${pad(d.getMinutes())}${pad(d.getSeconds())}.jpg`;
+    lastExport = {blob:r.blob, name};
+    const img = $('#saveImg'); if (img.src.startsWith('blob:')) URL.revokeObjectURL(img.src);
+    img.src = URL.createObjectURL(r.blob);
+    $('#saveMeta').textContent = `${r.w} × ${r.h} · ${(r.blob.size / 1048576).toFixed(1)} MB · ${L.b ? brandEn(L) + ' ' : ''}${L.en}`;
+    const dl = await capDownloads;
+    let file = null; try { file = new File([r.blob], name, {type:'image/jpeg'}); } catch (e) {}
+    const canShare = !inArtifact && file && navigator.canShare && navigator.canShare({files:[file]});
+    $('#btnShare').hidden = !canShare;
+    $('#btnDoSave').hidden = inArtifact && !dl;
+    $('#btnDoSave').textContent = inArtifact ? '保存图片' : (canShare ? '存储到照片…' : '下载图片');
+    openSheet($('#sheetSave'));
+  } catch (e) {
+    console.error(e); toast('输出失败，可以在设置里改成 1200 万像素再试');
+  } finally { busy(false); }
+}
+async function shareFile(){
+  const f = new File([lastExport.blob], lastExport.name, {type:'image/jpeg'});
+  try { await navigator.share({files:[f], title:'AgX 银盐'}); } catch (e) { if (e.name !== 'AbortError') toast('分享没有完成，可以长按图片保存'); }
+}
+$('#btnDoSave').addEventListener('click', async () => {
+  if (!lastExport) return;
+  if (inArtifact) {
+    const dl = await capDownloads; if (!dl) return;
+    try { await dl.save({filename:lastExport.name, data:lastExport.blob}); toast('已保存'); }
+    catch (e) { if (e && e.code === 'declined') return; toast(e && e.code === 'rate_limited' ? '上一个保存还没完成，请稍等' : '这里不能直接保存，请长按图片选择「存储到照片」'); }
+    return;
+  }
+  if (!$('#btnShare').hidden) return shareFile();
+  const a = document.createElement('a'); a.href = $('#saveImg').src; a.download = lastExport.name; document.body.append(a); a.click(); a.remove();
+});
+$('#btnShare').addEventListener('click', () => lastExport && shareFile());
+
+/* ---------- boot ---------- */
+renderScenes(); renderBrands(); renderStrip(); syncRatio(); syncSize();
+paintSample();
+selectLook(S.look, {quiet:true, keepRatio:true});
+updateReadout(); updateControls();
+caption(`<b>示例画面</b>点快门用 iPhone 相机拍一张，或从相册选择照片；按住画面对比原图`);
+const standalone = navigator.standalone || (window.matchMedia && matchMedia('(display-mode: standalone)').matches);
+if (!inArtifact && !standalone && 'serviceWorker' in navigator) {
+  let seen = false; try { seen = !!localStorage.getItem(PREF_KEY + '.a2hs'); localStorage.setItem(PREF_KEY + '.a2hs', '1'); } catch (e) {}
+  if (!seen) setTimeout(() => toast('在 Safari 点「分享 › 添加到主屏幕」，之后没网也能打开', 6000), 1500);
+}
+})();
+</script>
+<script>
+if ('serviceWorker' in navigator) addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
+</script>
+</body>
+</html>
